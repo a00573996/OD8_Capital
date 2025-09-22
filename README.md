@@ -1,1 +1,1 @@
-# OD8_NombreEquip
+# OD8_NombreEquipo

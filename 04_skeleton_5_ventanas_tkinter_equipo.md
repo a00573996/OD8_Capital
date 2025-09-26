@@ -70,11 +70,11 @@ python -m app.main
 ---
 
 ### 👥 Roles e integrantes
-- **Integrante A** → Ventana 1 — *win_home.py* (Bienvenida + messagebox).  
-- **Integrante B** → Ventana 2 — *win_form.py* (Formulario con validación y guardado).  
-- **Integrante C** → Ventana 3 — *win_list.py* (Listbox con CRUD básico).  
-- **Integrante D** → Ventana 4 — *win_table.py* (Tabla leyendo `sample.csv`).  
-- **Integrante E** → Ventana 5 — *win_canvas.py* (Canvas con dibujo básico).  
+- **Alfredo de Alba** → Ventana 1 — *win_home.py* (Bienvenida + messagebox).  
+- **Juan Pablo Padilla** → Ventana 2 — *win_form.py* (Formulario con validación y guardado).  
+- **Rodrigo Otero Juárez** → Ventana 3 — *win_list.py* (Listbox con CRUD básico).  
+- **Daniel Santino Alejandri Cure** → Ventana 4 — *win_table.py* (Tabla leyendo `sample.csv`).  
+- **David Alejandro Flores Cruz** → Ventana 5 — *win_canvas.py* (Canvas con dibujo básico).  
 
 ---
 

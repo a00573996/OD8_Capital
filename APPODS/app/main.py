@@ -8,7 +8,7 @@ from app.win_canvas import open_win_canvas
 
 def main():
     root = tk.Tk()
-    root.title("ZAVE.1")
+    root.title("ZAVE0.1")
     root.geometry("420x340")
 
     frame = ttk.Frame(root, padding=16)

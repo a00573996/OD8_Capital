@@ -3,7 +3,7 @@
 - Integré la gráfica dentro de la ventana de **Tkinter** con la clase `FigureCanvasTkAgg`, que actúa como un puente entre **matplotlib** y **Tkinter**.  
 - Armé un layout con un **Frame** donde se dibuja la gráfica y agregué un **botón** para cerrar la ventana.  
 
-# Cómo funciona
+## Cómo funciona
 Cuando llamas a `open_win_canvas(parent)`, se abre una ventana secundaria (tipo **Toplevel**) dentro de tu aplicación principal de Tkinter.
 
 Esa ventana tiene:
@@ -16,7 +16,7 @@ Visualmente, lo que ve el usuario es:
 - En el centro, la **gráfica de barras** mostrando cuánto dinero se gasta en cada categoría.  
 - Abajo a la derecha, un **botón para cerrar**.  
 
-# Aportamiento
+## Aportamiento
 - En lugar de solo mostrar texto o dibujar formas básicas en un **Canvas**, ahora tienes un **reporte visual y dinámico**.  
 - Puedes **cambiar los datos** (categorías y valores) para mostrar distintos reportes sin tocar nada más del diseño.  
 - Permite que tu aplicación sea más **interactiva y profesional**, porque combina la interfaz gráfica de **Tkinter** con el poder de visualización de **matplotlib**.  

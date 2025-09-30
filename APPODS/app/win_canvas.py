@@ -1,3 +1,5 @@
+#INSTALAR LIBRERIA MATPLOT, escribir en terminal: pip install matplotlib
+
 import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg

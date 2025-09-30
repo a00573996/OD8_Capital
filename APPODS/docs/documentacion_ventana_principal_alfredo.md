@@ -1,6 +1,6 @@
 # Alfredo De Alba Ulloa - A01541178
 
-## Ventana Inicial — ZAVE
+## main
 
 ### Lista de cambios aplicados a la ventana
 

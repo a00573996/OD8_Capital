@@ -7,4 +7,5 @@ Cambios realizados:
 \-Cambiar botones por “Agregar gastos”
 
 APPODS/docs/win_list.png
+
 Reflexión: los cambios que realicé van a ayudar a que podamos empezar a registrar los gastos en nuestra app.

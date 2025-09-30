@@ -1,9 +1,10 @@
 {
   "version": "0.2.0",
   "configurations": [
+    
     {
       "name": "Ejecutar app.main (con intérprete seleccionado)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "app.main",
       "console": "integratedTerminal",
@@ -12,7 +13,7 @@
     },
     {
       "name": "Ejecutar app.main (forzar .venv)",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "app.main",
       "console": "integratedTerminal",

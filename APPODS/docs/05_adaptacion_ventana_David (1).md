@@ -63,8 +63,5 @@
 ---
 
 ### Captura de pantalla
-*(Aquí puede insertarse la captura con formato Markdown si está disponible, por ejemplo:)*
-
-```markdown
 ![Captura de pantalla](APPODS/docs/win_formDATOS_INGRESOS.png)
 

@@ -2,9 +2,6 @@
 
 **Autor:** David Alejandro Flores Cruz — *A00573996*  
 **Módulo:** `win_form`
-
-> Aplicación de escritorio para capturar datos del usuario y sus ingresos (fijos y variables), con validaciones, cálculo automático y exportación a JSON.
-
 ---
 
 ## 🧭 Índice

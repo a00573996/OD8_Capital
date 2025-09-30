@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Ejecutar app.main",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "app.main",
       "console": "integratedTerminal",

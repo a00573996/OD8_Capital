@@ -9,7 +9,19 @@
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}/APPODS",
-      "python": "${command:python.interpreterPath}"
+      "python": "${command:python.interpreterPath}",
+      "redirectOutput": true
+    },
+    {
+      "name": "Ejecutar main.py directo",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/APPODS/app/main.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${command:python.interpreterPath}",
+      "redirectOutput": true
     }
   ]
 }
+

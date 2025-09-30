@@ -1,72 +1,62 @@
-# Documentación --- Ventana Principal ZAVE
+# Alfredo De Alba Ulloa - A01541178
 
-## Descripción General
+## Ventana Inicial — ZAVE
 
-Esta es la ventana principal de la aplicación **ZAVE --- Finanzas
-Personales (ODS 8)**.\
-Su propósito es servir como menú de navegación para acceder a las
-diferentes secciones de la aplicación, relacionadas con la
-administración de ingresos y gastos de los usuarios.
+### Lista de cambios aplicados a la ventana
 
-La ventana mantiene la funcionalidad original, pero fue adaptada con un
-**diseño más estético y profesional**, empleando una paleta de colores
-en verde (más corporativo que el azul previo) y un layout tipo *card*
-con jerarquía visual.
+---
 
-## Características principales
+#### Título y tamaño
+- Se cambió el título a **“ZAVE — Finanzas Personales (ODS 8)”**.
+- Se definió un tamaño mínimo de **480×420 px** y se añadió **centrado automático** en pantalla.
+- Se impidió el redimensionamiento para mantener la estética.
 
--   **Título de la aplicación**: `ZAVE — Finanzas Personales (ODS 8)`
--   **Versión mostrada**: `v0.1`
--   **Tamaño mínimo de ventana**: 480x420 píxeles
--   **Centrado automático** de la ventana en pantalla
--   **Estilos personalizados** mediante `ttk.Style`:
-    -   Verde corporativo para los botones principales
-    -   Rojo para el botón de salida
-    -   Fondo gris claro con tarjetas blancas (*card layout*)
-    -   Tipografía clara con jerarquía (encabezados, subtítulos, pie de
-        página)
--   **Footer**: mensaje recordando el objetivo del proyecto alineado con
-    el **ODS 8**
+---
 
-## Opciones del Menú
+#### Diseño general
+- Se implementó un diseño estilo **card** (tarjeta blanca sobre fondo gris claro).
+- Se añadió un **footer** con la leyenda del proyecto alineado al **ODS 8**.
+- Se usó una tipografía clara y jerarquizada:
+  - **Título grande y en negritas**
+  - Subtítulo con información de la versión y propósito
+  - Texto auxiliar en tono gris atenuado
 
-1.  **Home / Bienvenida**\
-    Abre la ventana inicial con un mensaje de bienvenida.
+---
 
-2.  **Ingresos**\
-    Abre la ventana para registrar ingresos fijos y variables.
+#### Estilos y colores
+- Se cambió el color principal de azul a un **verde profesional (#16A34A)** con hover más oscuro.
+- Botones principales en verde para dar identidad financiera.
+- Botón **“Salir”** en rojo (estilo de peligro).
+- Separadores finos en gris para diferenciar secciones.
 
-3.  **Registro de Gastos**\
-    Abre la ventana para ingresar y administrar gastos.
+---
 
-4.  **Reporte de Gastos**\
-    Abre la ventana con reportes tabulares de gastos registrados.
+#### Menú principal
+Se mantuvo la misma **funcionalidad** y orden de botones, con estilo mejorado:
 
-5.  **Reporte Gráfico de Gastos**\
-    Abre la ventana con gráficos que representan visualmente los gastos.
+1. **Home / Bienvenida**  
+   Abre la pantalla de inicio.
 
-------------------------------------------------------------------------
+2. **Ingresos**  
+   Ventana de registro de ingresos fijos y variables.
 
-### Botón especial: **Salir**
+3. **Registro de Gastos**  
+   Permite registrar gastos.
 
--   Ubicado al final del menú, en rojo (estilo de peligro).
--   Cierra la aplicación al presionarlo.
--   Se ajustó para que siempre **quepa dentro de la pantalla**, alineado
-    con el resto de botones.
+4. **Reporte de Gastos**  
+   Muestra tabla de gastos.
 
-------------------------------------------------------------------------
+5. **Reporte Gráfico de Gastos**  
+   Despliega reportes en gráficos.
 
-## Justificación de los cambios de diseño
+---
 
--   Se cambió el color principal de azul a verde, transmitiendo un
-    estilo más profesional y relacionado con el tema financiero.\
--   Se mejoró la organización visual mediante un contenedor tipo *card*,
-    separadores y jerarquía tipográfica.\
--   Se mantiene la **funcionalidad intacta** de los botones y callbacks,
-    lo que garantiza compatibilidad con el resto del proyecto.
+#### Botón especial: Salir
+- Botón rojo (estilo de peligro).
+- Ajustado para que **siempre quepa en pantalla** y esté alineado con el resto de botones.
+- Ubicado al final de la tarjeta, después de un separador.
 
-## Relación con el proyecto
+---
 
-Estos cambios contribuyen a la misión del proyecto **ZAVE**: ayudar a
-los jóvenes y personas interesadas en organizar mejor sus finanzas,
-alineándose al **ODS 8: Trabajo decente y crecimiento económico**.
+### Captura de pantalla
+![Captura de pantalla](./ventana_inicialZAVE.png)

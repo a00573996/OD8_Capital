@@ -1,25 +1,15 @@
 {
   "version": "0.2.0",
   "configurations": [
-    
     {
-      "name": "Ejecutar app.main (con intérprete seleccionado)",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "app.main",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "cwd": "${workspaceFolder}/APPODS"
-    },
-    {
-      "name": "Ejecutar app.main (forzar .venv)",
-      "type": "debugpy",
+      "name": "Ejecutar app.main",
+      "type": "python",
       "request": "launch",
       "module": "app.main",
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}/APPODS",
-      "python": "${workspaceFolder}\\.venv\\Scripts\\python.exe"
+      "python": "${command:python.interpreterPath}"
     }
   ]
 }

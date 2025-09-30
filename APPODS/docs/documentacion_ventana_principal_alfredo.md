@@ -59,4 +59,4 @@ Se mantuvo la misma **funcionalidad** y orden de botones, con estilo mejorado:
 ---
 
 ### Captura de pantalla
-![Captura de pantalla](./ventana_inicialZAVE.png)
+![Captura de pantalla](mainMENUZAVE.png)

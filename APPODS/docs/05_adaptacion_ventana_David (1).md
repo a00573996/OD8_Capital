@@ -66,5 +66,5 @@
 *(Aquí puede insertarse la captura con formato Markdown si está disponible, por ejemplo:)*
 
 ```markdown
-![Captura de pantalla](ruta/de/la/imagen.png)
+![Captura de pantalla](APPODS/docs/win_formDATOS_INGRESOS.png)
 

@@ -20,3 +20,5 @@ Visualmente, lo que ve el usuario es:
 - En lugar de solo mostrar texto o dibujar formas básicas en un **Canvas**, ahora tienes un **reporte visual y dinámico**.  
 - Puedes **cambiar los datos** (categorías y valores) para mostrar distintos reportes sin tocar nada más del diseño.  
 - Permite que tu aplicación sea más **interactiva y profesional**, porque combina la interfaz gráfica de **Tkinter** con el poder de visualización de **matplotlib**.  
+
+

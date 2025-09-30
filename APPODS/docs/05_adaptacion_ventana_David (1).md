@@ -1,4 +1,4 @@
-# Registro de usuario e ingresos (WinForms)
+# Registro de usuario e ingresos (Win_Form)
 
 **Autor:** David Alejandro Flores Cruz — *A00573996*  
 **Módulo:** `win_form`

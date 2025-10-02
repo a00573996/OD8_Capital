@@ -42,8 +42,4 @@
   - **Humedad relativa (%)**.  
   - **Velocidad del viento (km/h)**.  
 
----
-
-## ✅ Resumen
-La nueva versión consulta **CDMX** en lugar de León, cambia el parámetro de la API de **temperatura** a **humedad y viento**, ajusta la estética de las gráficas (marcadores, grosor, transparencia y rejilla) y mejora la interacción al evitar duplicación de gráficos al recargar.
 

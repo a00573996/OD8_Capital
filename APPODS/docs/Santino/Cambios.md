@@ -1,30 +1,41 @@
-## Cambios entre el código original y el modificado
+## Diferencias entre los dos códigos
 
-### 1. **Ubicación**
-- Antes: León, Gto.  
-- Ahora: Miami, FL.  
+### 1. Ubicación
+Primer código: **Miami, FL** (lat=25.76, lon=-80.19).  
+Segundo código: **León, Gto** (lat=21.12, lon=-101.68).  
+
+### 2. Rango de datos
+Primer código: usa **forecast_days=N** → obtiene el pronóstico de los próximos días (por defecto 2).  
+  Segundo código: usa **past_days=1** → obtiene datos de las últimas 24 horas.  
+
+### 3. Función `fetch_data`
+- Primer código: recibe un argumento (`fetch_data(dias=2)`) que permite elegir cuántos días de pronóstico descargar.  
+- Segundo código: no recibe argumentos, siempre consulta las últimas 24 horas.  
+
+### 4. Gráficas
+- Primer código:  
+  - Línea en azul.  
+  - Barras en color naranja.  
+  - Títulos con “Miami”.  
+
+- Segundo código:  
+  - Colores por defecto de matplotlib.  
+  - Títulos con “León”.  
+
+
+### 5. Ventana Tkinter
+- Primer código:  
+  - Ventana más compacta: `960x800`.  
+  - Título de ventana: “Clima con Open-Meteo”.  
+  - Botón con texto “Cargar gráficas”.  
+
+- Segundo código:  
+  - Ventana más grande: `960x1000`.  
+  - Título de ventana: “Canvas con API (Open-Meteo) y gráficas”.  
+  - Botón con texto “Cargar y mostrar gráficas”.  
 
 ---
 
-### 2.  **Rango de tiempo**
-- Antes: Últimas 24 horas (pasado).  
-- Ahora: Pronóstico de los próximos N días (futuro).  
-- La función ahora acepta un parámetro para definir el número de días.  
-
----
-
-### 3.  **Gráficas**
-- Antes: Colores por defecto y títulos con "León".  
-- Ahora: Colores definidos (línea azul, barras naranjas) y títulos con "Miami".  
-
----
-
-### 4.  **Ventana Tkinter**
-- Antes: Ventana más alta (960x1000) y botón con texto “Cargar y mostrar gráficas”.  
-- Ahora: Ventana más compacta (960x800) y botón con texto más corto “Cargar gráficas”.  
-
----
-
-### 5.  **Funciones**
-- Antes: Función fija, siempre consultaba León y solo el pasado.  
-- Ahora: Función flexible, permite elegir cuántos días de pronóstico obtener.  
+### 6. Comentarios en docstrings
+- Primer código: describe que obtiene datos de **Miami, pronóstico futuro**.  
+- Segundo código: describe que obtiene datos de **León, últimas 24 horas**.  

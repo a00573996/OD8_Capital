@@ -1,4 +1,4 @@
-### Alfredp
+### Alfredo
 # Cambios realizados en la nueva versión de `win_canvas.py`
 
 ## Ciudad consultada

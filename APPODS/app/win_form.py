@@ -198,6 +198,6 @@ def open_win_form(parent: tk.Tk):
             messagebox.showerror("Error", f"No se pudieron guardar los datos:\n{e}")
 
     btns_final = ttk.Frame(frm)
-    btns_final.grid(row=12, column=0, columnspan=4, pady=12, sticky="e")
+    btns_final.grid(row=11, column=0, columnspan=4, pady=12, sticky="e")
     ttk.Button(btns_final, text="Guardar", command=validar_y_guardar).pack(side="right", padx=6)
     ttk.Button(btns_final, text="Cerrar", command=win.destroy).pack(side="right")

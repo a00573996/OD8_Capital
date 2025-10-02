@@ -1,5 +1,6 @@
 ### Alfredo
 # Cambios realizados en la nueva versión de `win_canvas.py`
+![Imagen de WhatsApp 2025-10-02 a las 09 09 55_c787655f](https://github.com/user-attachments/assets/379747ac-c77a-4a21-bb42-1a799afd2b6f)
 
 ## Ciudad consultada
 Se modificó la ubicación de la consulta en la API de Open-Meteo.

@@ -1,5 +1,6 @@
 ### David Flores 
 # Cambios realizados en `win_canvas.py`
+<img width="1192" height="1002" alt="image" src="https://github.com/user-attachments/assets/4bf54646-63f7-438c-8112-c4cee1b422a0" />
 
 ## 1. Ciudad consultada (latitud/longitud)
 - **Antes:** León, Gto (`latitude=21.12`, `longitude=-101.68`).  

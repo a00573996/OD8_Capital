@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def open_win_canvas(parent: tk.Tk):
     win = tk.Toplevel(parent)
-    win.title("Reporte gráfico de gastos")
+    win.title("Reporte")
     win.geometry("1920x1080")
 
     frm = ttk.Frame(win, padding=12)

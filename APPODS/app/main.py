@@ -1,136 +1,141 @@
-import tkinter as tk
-from tkinter import ttk
+# main.py — ZAVE (Versión A adaptable, outlined en AZUL)
+import customtkinter as ctk
 from app.win_home import open_win_home
 from app.win_form import open_win_form
 from app.win_list import open_win_list
 from app.win_table import open_win_table
 from app.win_canvas import open_win_canvas
 
-APP_TITLE = "ZAVE — Finanzas Personales (ODS 8)"
+APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
 APP_VERSION = "v0.1"
 
-# ---------------------------------------------------------------------
-# 🎨 Estilo visual moderno (paleta + tipografía + jerarquía)
-# ---------------------------------------------------------------------
-def _init_style():
-    style = ttk.Style()
-    try:
-        style.theme_use("clam")
-    except tk.TclError:
-        pass
+# Paleta / constantes
+PRIMARY_BLUE       = "#2563EB"
+PRIMARY_BLUE_DARK  = "#1D4ED8"
+BG                 = "#F3F4F6"
+CARD_BG            = "#FFFFFF"
+TEXT               = "#111827"
+TEXT_MUTED         = "#6B7280"
+SEPARATOR          = "#E5E7EB"
+DANGER             = "#DC3545"
+DANGER_DARK        = "#B02A37"
 
-    # Paleta moderna
-    BG = "#F3F4F6"          # gris claro cálido
-    CARD_BG = "#FFFFFF"     # blanco puro
-    TEXT = "#111827"        # gris azulado profundo
-    MUTED = "#6B7280"       # texto secundario
-    PRIMARY = "#2563EB"     # azul moderno
-    PRIMARY_HOVER = "#1D4ED8"
-    SUCCESS = "#16A34A"     # verde moderno
-    DANGER = "#EF4444"      # rojo coral
-    SEPARATOR = "#E5E7EB"
+def _init_theme():
+    """Inicializa el tema en modo claro (sin dark)."""
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("green")  # base interna de CTk; personalizamos colores manualmente abajo
 
-    # Base
-    style.configure(".", background=BG, foreground=TEXT, font=("Segoe UI", 10))
-    style.configure("TFrame", background=BG)
-    style.configure("Card.TFrame", background=CARD_BG, relief="flat", borderwidth=0)
-
-    # Jerarquía visual
-    style.configure("Header.TLabel", background=CARD_BG, foreground=TEXT, font=("Segoe UI Semibold", 26))
-    style.configure("Subheader.TLabel", background=CARD_BG, foreground=MUTED, font=("Segoe UI", 12))
-    style.configure("Footer.TLabel", background=BG, foreground=MUTED, font=("Segoe UI", 10))
-
-    # Botones del menú
-    style.configure(
-        "Menu.TButton",
-        padding=(14, 12),
-        font=("Segoe UI Semibold", 12),
-        background=PRIMARY,
-        foreground="#FFFFFF",
-        borderwidth=0,
-        relief="flat",
-    )
-    style.map(
-        "Menu.TButton",
-        background=[("active", PRIMARY_HOVER), ("pressed", PRIMARY_HOVER)],
-        relief=[("pressed", "sunken")]
-    )
-
-    # Botón de salida
-    style.configure(
-        "Danger.TButton",
-        padding=(14, 12),
-        font=("Segoe UI Semibold", 12),
-        background=DANGER,
-        foreground="#FFFFFF",
-        borderwidth=0,
-        relief="flat",
-    )
-    style.map(
-        "Danger.TButton",
-        background=[("active", "#DC2626"), ("pressed", "#B91C1C")],
-    )
-
-    style.configure("TSeparator", background=SEPARATOR)
-
-# ---------------------------------------------------------------------
-# 🏠 Ventana principal moderna
-# ---------------------------------------------------------------------
 def main():
-    root = tk.Tk()
+    _init_theme()
+
+    root = ctk.CTk()
     root.title(APP_TITLE)
-    root.geometry("1920x1080")
-    root.resizable(True, True)
+    root.state("zoomed")  # maximiza para aprovechar la resolución del equipo
 
-    _init_style()
+    # --- Escalado adaptable respecto a 1920x1080 ---
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    scale_w, scale_h = sw / 1920, sh / 1080
+    scale = min(scale_w, scale_h)  # proporcional, respeta la relación
 
-    # Contenedor principal
-    outer = ttk.Frame(root, padding=40)
-    outer.pack(fill="both", expand=True)
+    # Tamaños derivados
+    radius        = max(8, int(10 * scale))
+    font_title    = max(20, int(34 * scale))
+    font_chip     = max(10, int(13 * scale))
+    font_btn      = max(10, int(16 * scale))
+    font_footer   = max(9,  int(12 * scale))
+    btn_h         = max(36, int(46 * scale))
+    btn_w         = max(280, int(380 * scale))
+    pad_outer     = max(20, int(40 * scale))
+    pad_card_x    = max(60, int(120 * scale))
+    pad_card_y    = max(20, int(40 * scale))
+    pad_sep_x     = max(100, int(160 * scale))
+    pad_top_title = max(18, int(36 * scale))
+    pad_between   = max(6,  int(8 * scale))
+    pad_after_sep = max(12, int(18 * scale))
+    pad_footer    = max(6,  int(8 * scale))
 
-    # “Card” central
-    card = ttk.Frame(outer, style="Card.TFrame", padding=50)
-    card.pack(fill="both", expand=True, ipadx=100, ipady=50)
-    card.columnconfigure(0, weight=1)
+    # ---------- Lienzo general ----------
+    outer = ctk.CTkFrame(root, fg_color=BG)
+    outer.pack(fill="both", expand=True, padx=pad_outer, pady=pad_outer)
 
-    # Encabezado con jerarquía
-    ttk.Label(card, text="💰 ZAVE", style="Header.TLabel", anchor="center")\
-        .grid(row=0, column=0, sticky="ew", pady=(10, 4))
-    ttk.Label(card, text=f"Versión {APP_VERSION}", style="Subheader.TLabel", anchor="center")\
-        .grid(row=1, column=0, sticky="ew", pady=(0, 20))
+    # ---------- Tarjeta central ----------
+    card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
+    card.pack(expand=True, padx=pad_card_x, pady=pad_card_y)
 
-    ttk.Separator(card).grid(row=2, column=0, sticky="ew", pady=(0, 20))
+    # ---------- Encabezado ----------
+    ctk.CTkLabel(
+        card, text="💰\u2003ZAVE",  # \u2003 = espacio fino entre icono y texto
+        text_color=TEXT,
+        font=ctk.CTkFont("Segoe UI Semibold", font_title)
+    ).pack(pady=(pad_top_title, pad_between))
 
-    # Botones con íconos sutiles (usando emojis)
-    menu_buttons = [
-        ("🏠  Home / Bienvenida", lambda: open_win_home(root)),
-        ("💵  Ingresos", lambda: open_win_form(root)),
-        ("🧾  Registro de Gastos", lambda: open_win_list(root)),
-        ("📊  Reporte de Gastos", lambda: open_win_table(root)),
-        ("📈  Reporte Gráfico de Gastos", lambda: open_win_canvas(root)),
-    ]
+    # Chip de versión
+    ctk.CTkLabel(
+        card,
+        text=f"Versión {APP_VERSION}",
+        text_color=TEXT_MUTED,
+        fg_color=BG,
+        corner_radius=max(6, int(8 * scale)),
+        padx=max(8, int(10 * scale)),
+        pady=max(3, int(4 * scale)),
+        font=ctk.CTkFont("Segoe UI", font_chip)
+    ).pack()
 
-    for i, (text, cmd) in enumerate(menu_buttons, start=3):
-        ttk.Button(card, text=text, style="Menu.TButton", command=cmd)\
-            .grid(row=i, column=0, sticky="ew", pady=10, padx=200)
+    # Separador corto
+    ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
+        .pack(fill="x", padx=pad_sep_x, pady=(pad_between * 2, pad_after_sep))
 
-    ttk.Separator(card).grid(row=9, column=0, sticky="ew", pady=(24, 16))
+    # ---------- Botón outlined AZUL ----------
+    def nav_button(parent, text, command):
+        return ctk.CTkButton(
+            parent,
+            text=text,
+            command=command,
+            fg_color="white",                # fondo blanco
+            hover_color="#EEF2FF",           # tinte azul MUY suave al hover
+            text_color=PRIMARY_BLUE,
+            border_color=PRIMARY_BLUE,
+            border_width=2,
+            corner_radius=radius,
+            font=ctk.CTkFont("Segoe UI", font_btn, "bold"),
+            height=btn_h,
+            width=btn_w
+        )
 
-    # Botón de salida visualmente separado
-    ttk.Button(card, text="🚪  Salir", style="Danger.TButton", command=root.destroy)\
-        .grid(row=10, column=0, sticky="ew", pady=(10, 0), padx=400)
+    # ---------- Botones de menú ----------
+    nav_button(card, "🏠\u2003Home / Bienvenida",        lambda: open_win_home(root)).pack(pady=pad_between)
+    nav_button(card, "💵\u2003Ingresos",                  lambda: open_win_form(root)).pack(pady=pad_between)
+    nav_button(card, "🧾\u2003Registro de Gastos",        lambda: open_win_list(root)).pack(pady=pad_between)
+    nav_button(card, "📊\u2003Reporte de Gastos",         lambda: open_win_table(root)).pack(pady=pad_between)
+    nav_button(card, "📈\u2003Reporte Gráfico de Gastos", lambda: open_win_canvas(root)).pack(pady=pad_between)
 
-    # Pie de página
-    ttk.Label(
+    # Separador inferior (corto)
+    ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
+        .pack(fill="x", padx=pad_sep_x, pady=(pad_after_sep * 1.2, pad_between * 1.5))
+
+    # ---------- Botón Salir (rojo) ----------
+    ctk.CTkButton(
+        card,
+        text="🚪\u2003Salir",
+        command=root.destroy,
+        fg_color=DANGER,
+        hover_color=DANGER_DARK,
+        text_color="white",
+        corner_radius=radius,
+        font=ctk.CTkFont("Segoe UI Semibold", font_btn),
+        height=btn_h,
+        width=btn_w
+    ).pack(pady=(pad_between, pad_top_title))
+
+    # ---------- Pie de página ----------
+    ctk.CTkLabel(
         outer,
-        text="Proyecto: ZAVE — Jóvenes organizando sus finanzas (ODS 8)",
-        style="Footer.TLabel",
-        anchor="center"
-    ).pack(fill="x", pady=(16, 0))
+        text="ZAVE — (ODS 8)",
+        text_color=TEXT_MUTED,
+        font=ctk.CTkFont("Segoe UI", font_footer)
+    ).pack(pady=(pad_footer, 0))
 
     root.mainloop()
-
-# ---------------------------------------------------------------------
 
 if __name__ == "__main__":
     main()

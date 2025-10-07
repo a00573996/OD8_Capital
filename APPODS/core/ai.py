@@ -19,7 +19,6 @@ def _norm(s: str) -> str:
         pass
     return s.strip().lower()
 
-
 # ---------------------------------------------------------------------
 # Rutas y defaults
 # ---------------------------------------------------------------------
@@ -41,7 +40,6 @@ DEFAULT_KEYMAP: Dict[str, str] = {
     "colegiatura": "Educación", "curso": "Educación", "libro": "Educación",
     "ropa": "Compras", "amazon": "Compras", "mercado": "Compras"
 }
-
 
 # ---------------------------------------------------------------------
 # Carga de configuración (JSON opcional)
@@ -77,10 +75,8 @@ def _load_config() -> Tuple[List[str], Dict[str, str]]:
     # Defaults (con keymap normalizado)
     return DEFAULT_CATS, { _norm(k): v for k, v in DEFAULT_KEYMAP.items() }
 
-
 # Expuestos (se cargan al importar)
 CATEGORIAS, KEYMAP = _load_config()
-
 
 def reload_config() -> Tuple[List[str], Dict[str, str]]:
     """Recarga categorias.json sin reiniciar la app (útil si editas el JSON en caliente)."""
@@ -88,7 +84,6 @@ def reload_config() -> Tuple[List[str], Dict[str, str]]:
     CATEGORIAS, KEYMAP = _load_config()
     print("[AI CONFIG] Recargado categorias.json")
     return CATEGORIAS, KEYMAP
-
 
 # ---------------------------------------------------------------------
 # Helpers de mapeo tolerante para salida de IA
@@ -128,20 +123,6 @@ def _best_match(ai_cat: str) -> Optional[str]:
 
     return None
 
-def _extract_json_text(resp) -> str:
-    """Lee el JSON string de la respuesta de OpenAI (Responses API o Chat Completions)."""
-    # Responses API (openai>=1.x)
-    try:
-        return resp.output[0].content[0].text
-    except Exception:
-        pass
-    # Chat Completions
-    try:
-        return resp.choices[0].message.content
-    except Exception:
-        return ""
-
-
 # ---------------------------------------------------------------------
 # Clasificación
 # ---------------------------------------------------------------------
@@ -156,23 +137,25 @@ def clasificar_local(texto: str) -> str:
             return cat
     return "Otros"
 
-
-def clasificar_texto(texto: str) -> str:
-    """
-    Intenta IA primero. Ajusta la salida de IA a la categoría más cercana.
-    Si no hay API key o hay error o no se puede casar la salida, usa local.
-    """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if api_key:
-        try:
-            from openai import OpenAI
-            client = OpenAI(api_key=api_key)
-
-            # Few-shot + lista cerrada
-            prompt = f"""
+def _build_chat_messages(texto: str):
+    # Prompt con lista cerrada y ejemplos (few-shot)
+    sys = (
+        "Eres un asistente que clasifica gastos en UNA sola categoría EXACTA "
+        "desde una lista específica. Devuelve siempre JSON válido."
+    )
+    cats_list = "\n".join(f"- {c}" for c in CATEGORIAS)
+    examples = (
+        '- "Starbucks latte" -> "Alimentos > Cafetería"\n'
+        '- "Uber al aeropuerto" -> "Transporte > Ride-hailing"\n'
+        '- "Pago CFE" -> "Vivienda/Servicios > Luz"\n'
+        '- "Costco compra quincenal" -> "Alimentos > Supermercado"\n'
+        '- "Netflix" -> "Entretenimiento > Streaming"\n'
+        '- "Farmacia Guadalajara ibuprofeno" -> "Compras > Farmacia/Perfumería"'
+    )
+    user = f"""
 Clasifica el siguiente gasto en UNA categoría EXACTA de esta lista (elige literalmente una):
 
-{chr(10).join('- ' + c for c in CATEGORIAS)}
+{cats_list}
 
 Reglas:
 - Devuelve SOLO JSON válido con una clave: {{ "categoria": "<UNA de la lista arriba>" }}
@@ -180,25 +163,39 @@ Reglas:
 - Si dudas, elige la más cercana.
 
 Ejemplos:
-- "Starbucks latte" -> "Alimentos > Cafetería"
-- "Uber al aeropuerto" -> "Transporte > Ride-hailing"
-- "Pago CFE" -> "Vivienda/Servicios > Luz"
-- "Costco compra quincenal" -> "Alimentos > Supermercado"
-- "Netflix" -> "Entretenimiento > Streaming"
-- "Farmacia Guadalajara ibuprofeno" -> "Compras > Farmacia/Perfumería"
+{examples}
 
 Texto: "{texto}"
-            """
+"""
+    return [
+        {"role": "system", "content": sys},
+        {"role": "user", "content": user},
+    ]
 
-            # Responses API
-            resp = client.responses.create(
+def clasificar_texto(texto: str) -> str:
+    """
+    Intenta IA primero (Chat Completions con JSON mode).
+    Ajusta la salida de IA a la categoría más cercana.
+    Si no hay API key, hay error o no se puede casar la salida, usa local.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key:
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+
+            messages = _build_chat_messages(texto)
+
+            # Chat Completions con JSON mode (soportado en SDK reciente)
+            chat = client.chat.completions.create(
                 model="gpt-4o-mini",
-                input=prompt,
+                messages=messages,
+                temperature=0,
                 response_format={"type": "json_object"},
                 timeout=12,
             )
 
-            raw = _extract_json_text(resp)
+            raw = chat.choices[0].message.content or ""
             out = json.loads(raw) if raw else {}
             ai_cat = (out.get("categoria") or "").strip()
 
@@ -216,7 +213,6 @@ Texto: "{texto}"
     print(f"[LOCAL] '{texto}' -> '{cat_local}'")
     return cat_local
 
-
 # ---------------------------------------------------------------------
 # Depuración
 # ---------------------------------------------------------------------
@@ -231,3 +227,4 @@ def debug_ai_config():
     print("KEYMAP contiene 'costco':", has_costco)
     if has_costco:
         print("KEYMAP['costco'] ->", KEYMAP.get('costco'))
+

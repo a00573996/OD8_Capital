@@ -6,7 +6,7 @@ from datetime import datetime
 # parents[0] = .../APPODS/core
 # parents[1] = .../APPODS
 # parents[2] = .../ODB_CAPITAL   ← raíz del repo (donde está /data)
-DATA_PATH = Path(__file__).resolve().parents[2] / "data"
+DATA_PATH = Path(__file__).resolve().parents[3] / "data"
 CSV_GASTOS = DATA_PATH / "gastos.csv"
 CABECERA = ["fecha", "descripcion", "categoria", "monto"]
 

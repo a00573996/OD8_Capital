@@ -1,15 +1,14 @@
+# APPODS/core/storage.py
 from pathlib import Path
 import csv
 from datetime import datetime
+from .paths import get_data_dir
 
-# Raíz del repo: .../ODB_CAPITAL
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_PATH = REPO_ROOT / "data"
+DATA_PATH = get_data_dir()
 CSV_GASTOS = DATA_PATH / "gastos.csv"
 CABECERA = ["fecha", "descripcion", "categoria", "monto"]
 
 def ensure_data_file():
-    DATA_PATH.mkdir(parents=True, exist_ok=True)
     if not CSV_GASTOS.exists():
         with open(CSV_GASTOS, "w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(CABECERA)
@@ -27,7 +26,6 @@ def load_gastos():
         return list(csv.DictReader(f))
 
 def clear_gastos():
-    ensure_data_file()
     with open(CSV_GASTOS, "w", newline="", encoding="utf-8") as f:
         csv.writer(f).writerow(CABECERA)
 

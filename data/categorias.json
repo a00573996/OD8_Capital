@@ -41,14 +41,24 @@
     "Otros"
   ],
   "keymap": {
+    "costco": "Alimentos > Supermercado",
+    "sam's": "Alimentos > Supermercado",
+    "sams": "Alimentos > Supermercado",
+    "city market": "Alimentos > Supermercado",
+    "la comer": "Alimentos > Supermercado",
+    "chedraui": "Alimentos > Supermercado",
+    "bodega aurrera": "Alimentos > Supermercado",
+    "walmart": "Alimentos > Supermercado",
+
     "super": "Alimentos > Supermercado",
     "súper": "Alimentos > Supermercado",
     "soriana": "Alimentos > Supermercado",
     "heb": "Alimentos > Supermercado",
-    "walmart": "Alimentos > Supermercado",
+
     "oxxo": "Alimentos > Snacks/Tienda",
     "tienda": "Alimentos > Snacks/Tienda",
     "abarrotes": "Alimentos > Snacks/Tienda",
+
     "restaurante": "Alimentos > Restaurante",
     "restaurant": "Alimentos > Restaurante",
     "taquería": "Alimentos > Restaurante",
@@ -56,13 +66,16 @@
     "mcdonald": "Alimentos > Restaurante",
     "burger king": "Alimentos > Restaurante",
     "kfc": "Alimentos > Restaurante",
-    "domino": "Alimentos > Restaurante",
+    "dominos": "Alimentos > Restaurante",
+
     "ubereats": "Alimentos > Delivery",
     "didi food": "Alimentos > Delivery",
     "rappi": "Alimentos > Delivery",
+
     "starbucks": "Alimentos > Cafetería",
     "café": "Alimentos > Cafetería",
     "coffee": "Alimentos > Cafetería",
+
     "bar": "Bebidas > Alcohol/Bar",
     "cerveza": "Bebidas > Alcohol/Bar",
     "vino": "Bebidas > Alcohol/Bar",

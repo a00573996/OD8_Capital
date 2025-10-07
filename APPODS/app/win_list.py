@@ -1,9 +1,12 @@
-# win_list.py — ZAVE (Registro de Gastos con CSV, adaptable, estilo azul)
+# win_list.py — ZAVE (Registro de Gastos con IA y CSV, estilo azul, adaptable)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
 
-from core.storage import append_gasto, load_gastos, clear_gastos  # CSV: gastos.csv
+# Persistencia CSV
+from core.storage import append_gasto, load_gastos, clear_gastos
+# Clasificación automática (OpenAI si hay API key; si no, fallback local)
+from core.ai import clasificar_texto
 
 # Paleta coherente (Versión A, primario AZUL)
 PRIMARY_BLUE       = "#2563EB"
@@ -14,26 +17,14 @@ TEXT               = "#111827"
 TEXT_MUTED         = "#6B7280"
 SEPARATOR          = "#E5E7EB"
 
-# Categorías disponibles (para selección manual y para IA)
-CATEGORIAS = [
-    "Comida y Bebidas",
-    "Transporte",
-    "Entretenimiento",
-    "Salud",
-    "Educación",
-    "Hogar y Servicios",
-    "Compras",
-    "Otros"
-]
-
 def open_win_list(parent: ctk.CTk):
     # Ventana secundaria
     win = ctk.CTkToplevel(parent)
     win.title("Registro de Gastos")
-    win.state("zoomed")  # aprovechar resolución
+    win.state("zoomed")
     win.minsize(1280, 720)
 
-    # ---------- Escalado adaptable respecto a 1920x1080 ----------
+    # ---------- Escalado adaptable (base 1920x1080) ----------
     sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
     scale = min(sw / 1920, sh / 1080)
 
@@ -65,7 +56,8 @@ def open_win_list(parent: ctk.CTk):
     ).grid(row=0, column=0, columnspan=4, sticky="w", padx=pad_card, pady=(pad_card, int(8 * scale)))
 
     ctk.CTkLabel(
-        card, text="Agrega tus gastos. Se guardan en data/gastos.csv para usar en el reporte.",
+        card,
+        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (IA + reglas locales) y se guarda en data/gastos.csv.",
         text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl)
     ).grid(row=1, column=0, columnspan=4, sticky="w", padx=pad_card)
 
@@ -85,27 +77,16 @@ def open_win_list(parent: ctk.CTk):
     ent_monto = ctk.CTkEntry(card, height=entry_h, width=140)
     ent_monto.grid(row=3, column=3, sticky="w", pady=6)
 
-    # Categoría (editable; IA la sugerirá más adelante)
-    ctk.CTkLabel(card, text="Categoría:", text_color=TEXT,
-                 font=ctk.CTkFont("Segoe UI", font_lbl)).grid(row=4, column=0, sticky="e", padx=(0, 8), pady=6)
-    cmb_categoria = ctk.CTkOptionMenu(
-        card, values=CATEGORIAS, fg_color="white", button_color=PRIMARY_BLUE,
-        button_hover_color=PRIMARY_BLUE_DARK, text_color=PRIMARY_BLUE,
-        font=ctk.CTkFont("Segoe UI", font_lbl)
-    )
-    cmb_categoria.set("Otros")
-    cmb_categoria.grid(row=4, column=1, sticky="w", pady=6)
-
     # ---------- Acciones ----------
     actions = ctk.CTkFrame(card, fg_color=CARD_BG)
-    actions.grid(row=4, column=2, columnspan=2, sticky="e", pady=6)
+    actions.grid(row=4, column=0, columnspan=4, sticky="e", pady=6, padx=pad_card)
 
     def agregar():
         desc = (ent_desc.get() or "").strip()
         if not desc:
             messagebox.showwarning("Aviso", "Escribe la descripción del gasto.")
             return
-        cat = cmb_categoria.get()
+
         monto_txt = (ent_monto.get() or "").strip()
         try:
             monto_val = float(monto_txt) if monto_txt else 0.0
@@ -113,26 +94,30 @@ def open_win_list(parent: ctk.CTk):
             messagebox.showwarning("Aviso", "Monto inválido. Usa un número (ej. 120.50).")
             return
 
-        # UI
+        # 1) Clasificación automática (IA con fallback local)
+        cat = clasificar_texto(desc)
+
+        # 2) UI
         lb.insert("end", f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}")
+
+        # 3) Limpiar campos
         ent_desc.delete(0, "end")
         ent_monto.delete(0, "end")
 
-        # Persistencia CSV
+        # 4) Persistencia CSV
         append_gasto(descripcion=desc, categoria=cat, monto=monto_val)
 
     def eliminar():
         sel = lb.curselection()
         if not sel:
             return
-        # Solo borra de la vista; si quisieras también quitar del CSV,
-        # necesitaríamos reescribir el archivo (no lo hacemos por simplicidad).
+        # Solo borra de la vista. Para eliminar del CSV habría que reescribirlo (no se implementa aquí).
         lb.delete(sel[0])
 
     def limpiar():
         if lb.size() == 0:
             return
-        if messagebox.askyesno("Confirmar", "¿Limpiar todos los gastos (lista + archivo CSV)?"):
+        if messagebox.askyesno("Confirmar", "¿Limpiar todos los gastos? (lista + CSV)"):
             lb.delete(0, "end")
             clear_gastos()
 
@@ -144,17 +129,21 @@ def open_win_list(parent: ctk.CTk):
         command=agregar
     ).pack(side="right", padx=6)
 
-    # Stub IA (lo conectaremos luego)
-    def _clasificar_stub():
-        messagebox.showinfo("Próximo paso",
-                            "Aquí conectaremos la clasificación con IA para sugerir categoría automáticamente.")
     ctk.CTkButton(
-        actions, text="Clasificar (IA)",
-        fg_color="white", hover_color="#EEF2FF",
+        actions, text="Eliminar seleccionado",
+        fg_color="white", hover_color="#F8FAFF",
         border_color=PRIMARY_BLUE, border_width=2, text_color=PRIMARY_BLUE,
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
-        command=_clasificar_stub
-    ).pack(side="right", padx=6)
+        command=eliminar
+    ).pack(side="left", padx=6)
+
+    ctk.CTkButton(
+        actions, text="Limpiar",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=TEXT, border_color=SEPARATOR, border_width=2,
+        height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
+        command=limpiar
+    ).pack(side="left", padx=6)
 
     # ---------- Lista de gastos ----------
     list_container = ctk.CTkFrame(card, fg_color=BG, corner_radius=radius)
@@ -177,9 +166,13 @@ def open_win_list(parent: ctk.CTk):
         desc  = (r.get("descripcion") or "").strip()
         cat   = (r.get("categoria") or "Otros").strip()
         monto = r.get("monto", "0.00")
-        lb.insert("end", f"{desc}  —  [{cat}]  —  ${float(monto):,.2f}")
+        try:
+            monto_val = float(monto)
+        except ValueError:
+            monto_val = 0.0
+        lb.insert("end", f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}")
 
-    # Enter = agregar
+    # Enter = agregar directo
     def _on_enter(event):
         agregar()
     ent_desc.bind("<Return>", _on_enter)

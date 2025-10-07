@@ -1,0 +1,11 @@
+{
+  "fresko": {
+    "final": "Otros"
+  },
+  "cerveza": {
+    "final": "Bebidas > Alcohol/Bar"
+  },
+  "cafe": {
+    "final": "Alimentos > Cafetería"
+  }
+}

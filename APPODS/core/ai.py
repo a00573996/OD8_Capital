@@ -1,14 +1,11 @@
 # APPODS/core/ai.py
 from pathlib import Path
 from typing import Optional, Tuple, Dict, List
-import os
-import json
+import os, json
+from .paths import get_data_dir
 
-# ---------------------------------------------------------------------
-# Utilidades
-# ---------------------------------------------------------------------
+# ---------------- Utilidades ----------------
 def _norm(s: str) -> str:
-    """Normaliza a minúsculas y sin acentos para comparaciones robustas."""
     if not isinstance(s, str):
         return ""
     try:
@@ -19,118 +16,70 @@ def _norm(s: str) -> str:
         pass
     return s.strip().lower()
 
-# ---------------------------------------------------------------------
-# Rutas y defaults
-# ---------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parents[2]  # .../ODB_CAPITAL
-CATS_JSON = REPO_ROOT / "data" / "categorias.json"
+# ---------------- Rutas y defaults ----------------
+CATS_JSON = get_data_dir() / "categorias.json"
 
 DEFAULT_CATS: List[str] = [
     "Comida y Bebidas", "Transporte", "Entretenimiento", "Salud",
     "Educación", "Hogar y Servicios", "Compras", "Otros"
 ]
-
 DEFAULT_KEYMAP: Dict[str, str] = {
-    "uber": "Transporte", "didi": "Transporte", "taxi": "Transporte", "gasolina": "Transporte",
-    "starbucks": "Comida y Bebidas", "cafe": "Comida y Bebidas", "café": "Comida y Bebidas", "pizza": "Comida y Bebidas",
-    "restaurant": "Comida y Bebidas", "restaurante": "Comida y Bebidas", "hamburguesa": "Comida y Bebidas",
-    "netflix": "Entretenimiento", "cine": "Entretenimiento", "spotify": "Entretenimiento",
-    "cfe": "Hogar y Servicios", "luz": "Hogar y Servicios", "agua": "Hogar y Servicios", "internet": "Hogar y Servicios",
-    "farmacia": "Compras", "doctor": "Salud", "medicina": "Salud",
-    "colegiatura": "Educación", "curso": "Educación", "libro": "Educación",
-    "ropa": "Compras", "amazon": "Compras", "mercado": "Compras"
+    "uber":"Transporte","didi":"Transporte","taxi":"Transporte","gasolina":"Transporte",
+    "starbucks":"Comida y Bebidas","cafe":"Comida y Bebidas","café":"Comida y Bebidas","pizza":"Comida y Bebidas",
+    "restaurant":"Comida y Bebidas","restaurante":"Comida y Bebidas","hamburguesa":"Comida y Bebidas",
+    "netflix":"Entretenimiento","cine":"Entretenimiento","spotify":"Entretenimiento",
+    "cfe":"Hogar y Servicios","luz":"Hogar y Servicios","agua":"Hogar y Servicios","internet":"Hogar y Servicios",
+    "farmacia":"Compras","doctor":"Salud","medicina":"Salud",
+    "colegiatura":"Educación","curso":"Educación","libro":"Educación",
+    "ropa":"Compras","amazon":"Compras","mercado":"Compras"
 }
 
-# ---------------------------------------------------------------------
-# Carga de configuración (JSON opcional)
-# ---------------------------------------------------------------------
+# ---------------- Carga config (JSON opcional) ----------------
 def _load_config() -> Tuple[List[str], Dict[str, str]]:
-    """
-    Devuelve (CATEGORIAS, KEYMAP_NORMALIZADO).
-    Si existe /data/categorias.json lo usa; si no, usa defaults.
-    KEYMAP se devuelve con claves normalizadas (minúsculas/sin acentos).
-    """
     if CATS_JSON.exists():
         try:
-            with open(CATS_JSON, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
+            data = json.load(open(CATS_JSON, "r", encoding="utf-8"))
             cats = data.get("categorias")
             keym = data.get("keymap")
-
-            if isinstance(cats, list) and all(isinstance(x, str) for x in cats) and len(cats) > 0:
-                categorias = cats
-            else:
-                categorias = DEFAULT_CATS
-
-            if isinstance(keym, dict) and len(keym) > 0:
+            categorias = cats if isinstance(cats, list) and cats else DEFAULT_CATS
+            if isinstance(keym, dict) and keym:
                 keymap = { _norm(k): v for k, v in keym.items() if isinstance(k, str) and isinstance(v, str) }
             else:
                 keymap = { _norm(k): v for k, v in DEFAULT_KEYMAP.items() }
-
             return categorias, keymap
         except Exception as e:
             print(f"[AI CONFIG] Error leyendo {CATS_JSON}: {e}. Uso defaults.")
-
-    # Defaults (con keymap normalizado)
     return DEFAULT_CATS, { _norm(k): v for k, v in DEFAULT_KEYMAP.items() }
 
-# Expuestos (se cargan al importar)
 CATEGORIAS, KEYMAP = _load_config()
 
 def reload_config() -> Tuple[List[str], Dict[str, str]]:
-    """Recarga categorias.json sin reiniciar la app (útil si editas el JSON en caliente)."""
     global CATEGORIAS, KEYMAP
     CATEGORIAS, KEYMAP = _load_config()
     print("[AI CONFIG] Recargado categorias.json")
     return CATEGORIAS, KEYMAP
 
-# ---------------------------------------------------------------------
-# Helpers de mapeo tolerante para salida de IA
-# ---------------------------------------------------------------------
+# ---------------- Mapeo tolerante ----------------
 def _norm_map_categorias() -> Dict[str, str]:
-    """Devuelve un mapa normalizado -> categoría original exacta."""
     return { _norm(c): c for c in CATEGORIAS }
 
 def _best_match(ai_cat: str) -> Optional[str]:
-    """
-    Intenta casar la salida de la IA con una categoría válida, de forma tolerante.
-    - match exacto normalizado
-    - contains/begins con tokens
-    - tokens simples (ej. 'supermercado', 'cafe', 'gasolina')
-    """
     if not ai_cat:
         return None
     nm = _norm(ai_cat)
     cats_norm = _norm_map_categorias()
-
-    # 1) Match exacto (normalizado)
     if nm in cats_norm:
         return cats_norm[nm]
-
-    # 2) Heurística: contains / begins / ends
     for k, original in cats_norm.items():
-        if nm == k:
+        if nm == k or nm in k or k in nm:
             return original
-        if nm in k or k in nm:
-            return original
-
-    # 3) Tokens
-    tokens = nm.replace(">", " ").replace("/", " ").split()
-    for tk in tokens:
+    for tk in nm.replace(">", " ").replace("/", " ").split():
         if tk and tk in cats_norm:
             return cats_norm[tk]
-
     return None
 
-# ---------------------------------------------------------------------
-# Clasificación
-# ---------------------------------------------------------------------
+# ---------------- Clasificación ----------------
 def clasificar_local(texto: str) -> str:
-    """
-    Clasificador local por palabras clave (rápido y sin internet).
-    Busca cada clave normalizada dentro del texto normalizado.
-    """
     t = _norm(texto)
     for k_norm, cat in KEYMAP.items():
         if k_norm and k_norm in t:
@@ -138,11 +87,8 @@ def clasificar_local(texto: str) -> str:
     return "Otros"
 
 def _build_chat_messages(texto: str):
-    # Prompt con lista cerrada y ejemplos (few-shot)
-    sys = (
-        "Eres un asistente que clasifica gastos en UNA sola categoría EXACTA "
-        "desde una lista específica. Devuelve siempre JSON válido."
-    )
+    sys = ("Eres un asistente que clasifica gastos en UNA sola categoría EXACTA "
+           "desde una lista específica. Devuelve siempre JSON válido.")
     cats_list = "\n".join(f"- {c}" for c in CATEGORIAS)
     examples = (
         '- "Starbucks latte" -> "Alimentos > Cafetería"\n'
@@ -167,38 +113,41 @@ Ejemplos:
 
 Texto: "{texto}"
 """
-    return [
-        {"role": "system", "content": sys},
-        {"role": "user", "content": user},
-    ]
+    return [{"role":"system","content":sys},{"role":"user","content":user}]
 
 def clasificar_texto(texto: str) -> str:
-    """
-    Intenta IA primero (Chat Completions con JSON mode).
-    Ajusta la salida de IA a la categoría más cercana.
-    Si no hay API key, hay error o no se puede casar la salida, usa local.
-    """
     api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
         try:
             from openai import OpenAI
             client = OpenAI(api_key=api_key)
-
             messages = _build_chat_messages(texto)
 
-            # Chat Completions con JSON mode (soportado en SDK reciente)
-            chat = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                temperature=0,
-                response_format={"type": "json_object"},
-                timeout=12,
-            )
+            # 1) Intento con JSON mode (SDK reciente)
+            try:
+                chat = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages,
+                    temperature=0,
+                    response_format={"type": "json_object"},
+                    timeout=12,
+                )
+            except TypeError:
+                # 2) Fallback: sin response_format (SDK más viejo)
+                chat = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=messages,
+                    temperature=0,
+                    timeout=12,
+                )
 
             raw = chat.choices[0].message.content or ""
-            out = json.loads(raw) if raw else {}
-            ai_cat = (out.get("categoria") or "").strip()
+            try:
+                out = json.loads(raw)
+            except Exception:
+                out = {}
 
+            ai_cat = (out.get("categoria") or "").strip()
             match = _best_match(ai_cat)
             if match:
                 print(f"[IA] '{texto}' -> '{ai_cat}' => '{match}'")
@@ -208,23 +157,15 @@ def clasificar_texto(texto: str) -> str:
         except Exception as e:
             print(f"[IA] error: {e} (caigo a local)")
 
-    # Fallback local
     cat_local = clasificar_local(texto)
     print(f"[LOCAL] '{texto}' -> '{cat_local}'")
     return cat_local
 
-# ---------------------------------------------------------------------
-# Depuración
-# ---------------------------------------------------------------------
+# ---------------- Depuración ----------------
 def debug_ai_config():
-    """
-    Imprime en consola datos útiles para depurar configuración de categorías.
-    Llama a esta función desde donde prefieras si necesitas diagnosticar.
-    """
     print("JSON de categorías:", CATS_JSON)
     print("Total categorías:", len(CATEGORIAS))
-    has_costco = 'costco' in KEYMAP
-    print("KEYMAP contiene 'costco':", has_costco)
-    if has_costco:
-        print("KEYMAP['costco'] ->", KEYMAP.get('costco'))
+    print("'costco' en KEYMAP:", 'costco' in KEYMAP)
+    if 'costco' in KEYMAP:
+        print("KEYMAP['costco'] ->", KEYMAP['costco'])
 

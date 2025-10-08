@@ -1,44 +1,108 @@
-# APPODS/core/storage.py
-from pathlib import Path
-import csv
+# core/storage.py — manejo robusto de gastos.csv
+from __future__ import annotations
+import csv, os
 from datetime import datetime
+from typing import List, Dict, Tuple
 from .paths import get_data_dir
 
-DATA_PATH = get_data_dir()
-CSV_GASTOS = DATA_PATH / "gastos.csv"
-CABECERA = ["fecha", "descripcion", "categoria", "monto"]
+DATA_DIR = get_data_dir()
+GASTOS_CSV = DATA_DIR / "gastos.csv"
+FIELDNAMES = ["fecha", "descripcion", "categoria", "monto"]
 
-def ensure_data_file():
-    if not CSV_GASTOS.exists():
-        with open(CSV_GASTOS, "w", newline="", encoding="utf-8") as f:
-            csv.writer(f).writerow(CABECERA)
+def _ensure_data_dir():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-def append_gasto(descripcion: str, categoria: str, monto: float = 0.0, fecha_iso: str | None = None):
-    ensure_data_file()
-    if fecha_iso is None:
-        fecha_iso = datetime.now().isoformat(timespec="seconds")
-    with open(CSV_GASTOS, "a", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow([fecha_iso, descripcion, categoria, f"{float(monto):.2f}"])
+def _csv_is_empty(path) -> bool:
+    return (not path.exists()) or (path.stat().st_size == 0)
 
-def load_gastos():
-    ensure_data_file()
-    with open(CSV_GASTOS, "r", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+def append_gasto(descripcion: str, categoria: str, monto: float, fecha: str | None = None) -> None:
+    """
+    Agrega una fila al CSV garantizando encabezado y saltos correctos.
+    """
+    _ensure_data_dir()
+    new_file = not GASTOS_CSV.exists()
+    write_header = _csv_is_empty(GASTOS_CSV)
 
-def clear_gastos():
-    with open(CSV_GASTOS, "w", newline="", encoding="utf-8") as f:
-        csv.writer(f).writerow(CABECERA)
+    # Abrir SIEMPRE con newline="" en Windows para que csv maneje saltos.
+    with open(GASTOS_CSV, "a", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        if write_header:
+            writer.writeheader()  # escribe 'fecha,descripcion,categoria,monto\n'
+        writer.writerow({
+            "fecha": fecha or datetime.now().isoformat(timespec="seconds"),
+            "descripcion": descripcion,
+            "categoria": categoria,
+            "monto": f"{float(monto):.2f}",
+        })
 
-def totals(rows):
-    total_general = 0.0
-    por_categoria = {}
-    for r in rows:
+def load_gastos() -> List[Dict[str, str]]:
+    """
+    Carga todas las filas del CSV. Ignora líneas vacías.
+    Devuelve una lista de dicts con llaves: fecha, descripcion, categoria, monto.
+    """
+    _ensure_data_dir()
+    rows: List[Dict[str, str]] = []
+    if not GASTOS_CSV.exists():
+        return rows
+    with open(GASTOS_CSV, "r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            if not r:
+                continue
+            # Normaliza a las llaves esperadas; si falta alguna, pon string vacío
+            row = {
+                "fecha": (r.get("fecha") or "").strip(),
+                "descripcion": (r.get("descripcion") or "").strip(),
+                "categoria": (r.get("categoria") or "").strip(),
+                "monto": (r.get("monto") or "").strip(),
+            }
+            # Si por error el header quedó pegado (ej: 'monto2025-...'), intenta recuperarlo:
+            if not row["monto"]:
+                for k in list(r.keys()):
+                    if k and isinstance(k, str) and k.strip().lower().startswith("monto"):
+                        row["monto"] = (r.get(k) or "").strip()
+                        break
+            # descartar filas totalmente vacías
+            if any(row.values()):
+                rows.append(row)
+    return rows
+
+def clear_gastos(write_header: bool = True) -> None:
+    """
+    Limpia el CSV. Si write_header=True, deja solo el encabezado.
+    """
+    _ensure_data_dir()
+    with open(GASTOS_CSV, "w", encoding="utf-8", newline="") as f:
+        if write_header:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+            writer.writeheader()
+
+def totals(rows: List[Dict[str, str]]) -> Tuple[float, Dict[str, float]]:
+    """
+    Calcula total general y totales por categoría (texto completo).
+    """
+    def _to_float(x: str) -> float:
+        s = (x or "").strip()
+        if not s:
+            return 0.0
+        s = s.replace("$", "").replace("MXN", "").replace("USD", "").replace("€", "")
+        s = s.replace(" ", "")
+        # 1.234,56 -> 1234.56
+        if "," in s and "." not in s:
+            s = s.replace(".", "")
+            s = s.replace(",", ".")
+        else:
+            s = s.replace(",", "")
         try:
-            m = float(r.get("monto", 0) or 0)
-        except ValueError:
-            m = 0.0
-        total_general += m
-        cat = (r.get("categoria") or "Otros").strip()
-        por_categoria[cat] = por_categoria.get(cat, 0.0) + m
-    return total_general, por_categoria
+            return float(s)
+        except Exception:
+            return 0.0
 
+    total = 0.0
+    por_cat: Dict[str, float] = {}
+    for r in rows:
+        cat = (r.get("categoria") or "Otros").strip() or "Otros"
+        monto = _to_float(r.get("monto", "0"))
+        total += monto
+        por_cat[cat] = por_cat.get(cat, 0.0) + monto
+    return total, por_cat

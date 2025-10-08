@@ -5,8 +5,9 @@ from tkinter import messagebox
 
 # Persistencia CSV
 from core.storage import append_gasto, load_gastos, clear_gastos
-# Clasificación automática (OpenAI si hay API key; si no, fallback local)
-from core.ai import clasificar_texto
+# IA: primero Gemini, luego OpenAI (ai.py). Si ambas fallan, ai.py ya cae a local.
+from core.ai_gemini import clasificar_texto_gemini
+from core.ai import clasificar_texto as clasificar_texto_openai
 
 # Paleta coherente (Versión A, primario AZUL)
 PRIMARY_BLUE       = "#2563EB"
@@ -21,7 +22,10 @@ def open_win_list(parent: ctk.CTk):
     # Ventana secundaria
     win = ctk.CTkToplevel(parent)
     win.title("Registro de Gastos")
-    win.state("zoomed")
+    try:
+        win.state("zoomed")
+    except Exception:
+        win.geometry("1280x800")
     win.minsize(1280, 720)
 
     # ---------- Escalado adaptable (base 1920x1080) ----------
@@ -57,7 +61,7 @@ def open_win_list(parent: ctk.CTk):
 
     ctk.CTkLabel(
         card,
-        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (IA + reglas locales) y se guarda en data/gastos.csv.",
+        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (Gemini → OpenAI → local) y se guarda en data/gastos.csv.",
         text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl)
     ).grid(row=1, column=0, columnspan=4, sticky="w", padx=pad_card)
 
@@ -94,8 +98,10 @@ def open_win_list(parent: ctk.CTk):
             messagebox.showwarning("Aviso", "Monto inválido. Usa un número (ej. 120.50).")
             return
 
-        # 1) Clasificación automática (IA con fallback local)
-        cat = clasificar_texto(desc)
+        # ----- IA: primero GEMINI, si no ayuda -> OPENAI (que ya cae a local si falla) -----
+        cat = clasificar_texto_gemini(desc)
+        if cat == "Otros":
+            cat = clasificar_texto_openai(desc)
 
         # 2) UI
         lb.insert("end", f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}")
@@ -111,8 +117,7 @@ def open_win_list(parent: ctk.CTk):
         sel = lb.curselection()
         if not sel:
             return
-        # Solo borra de la vista. Para eliminar del CSV habría que reescribirlo (no se implementa aquí).
-        lb.delete(sel[0])
+        lb.delete(sel[0])  # solo borra de la vista
 
     def limpiar():
         if lb.size() == 0:

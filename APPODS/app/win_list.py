@@ -1,13 +1,18 @@
-# win_list.py — ZAVE (Registro de Gastos con IA y CSV, estilo azul, adaptable)
+# win_list.py — ZAVE (Registro de Gastos con IA/CSV + edición de categoría/descripcion/monto)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
+import json
 
 # Persistencia CSV
-from core.storage import append_gasto, load_gastos, clear_gastos
-# IA: primero Gemini, luego OpenAI (ai.py). Si ambas fallan, ai.py ya cae a local.
+from core.storage import append_gasto, load_gastos, clear_gastos, save_all_gastos
+
+# IA: primero Gemini, luego OpenAI (ai.py). Si ambas fallan, ai.py cae a local.
 from core.ai_gemini import clasificar_texto_gemini
 from core.ai import clasificar_texto as clasificar_texto_openai
+
+# Utilidad para ubicar data/
+from core.paths import get_data_dir
 
 # Paleta coherente (Versión A, primario AZUL)
 PRIMARY_BLUE       = "#2563EB"
@@ -18,8 +23,35 @@ TEXT               = "#111827"
 TEXT_MUTED         = "#6B7280"
 SEPARATOR          = "#E5E7EB"
 
+
+def _load_categorias_list() -> list[str]:
+    """Carga la lista de categorías desde data/categorias.json (o un fallback)."""
+    try:
+        with open(get_data_dir() / "categorias.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            cats = data.get("categorias")
+            if isinstance(cats, list) and cats:
+                return cats
+    except Exception:
+        pass
+    return [
+        "Alimentos y Bebidas > Supermercado",
+        "Alimentos y Bebidas > Restaurante / Comida rápida",
+        "Alimentos y Bebidas > Cafetería / Snacks",
+        "Transporte > Gasolina / Ride-hailing",
+        "Transporte > Público / Estacionamiento",
+        "Vivienda y Servicios > Renta / Hogar",
+        "Vivienda y Servicios > Servicios básicos (luz, agua, internet)",
+        "Salud y Bienestar > Medicinas / Consultas",
+        "Compras Personales > Ropa / Electrónica / Hogar",
+        "Mascotas > Alimento / Cuidado",
+        "Entretenimiento y Ocio > Cine / Streaming / Eventos",
+        "Finanzas y Trámites > Ahorro / Pagos / Impuestos",
+        "Otros"
+    ]
+
+
 def open_win_list(parent: ctk.CTk):
-    # Ventana secundaria
     win = ctk.CTkToplevel(parent)
     win.title("Registro de Gastos")
     try:
@@ -28,7 +60,7 @@ def open_win_list(parent: ctk.CTk):
         win.geometry("1280x800")
     win.minsize(1280, 720)
 
-    # ---------- Escalado adaptable (base 1920x1080) ----------
+    # ---------- Escalado adaptable ----------
     sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
     scale = min(sw / 1920, sh / 1080)
 
@@ -61,7 +93,7 @@ def open_win_list(parent: ctk.CTk):
 
     ctk.CTkLabel(
         card,
-        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (Gemini → OpenAI → local) y se guarda en data/gastos.csv.",
+        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (Gemini → OpenAI → local) y se guarda en data/gastos.csv. Puedes editar categoría, descripción y monto desde la lista.",
         text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl)
     ).grid(row=1, column=0, columnspan=4, sticky="w", padx=pad_card)
 
@@ -69,13 +101,11 @@ def open_win_list(parent: ctk.CTk):
         .grid(row=2, column=0, columnspan=4, sticky="ew", padx=pad_sep_x, pady=(int(12 * scale), int(16 * scale)))
 
     # ---------- Entradas ----------
-    # Descripción
     ctk.CTkLabel(card, text="Descripción del gasto:", text_color=TEXT,
                  font=ctk.CTkFont("Segoe UI", font_lbl)).grid(row=3, column=0, sticky="e", padx=(0, 8), pady=6)
     ent_desc = ctk.CTkEntry(card, height=entry_h)
     ent_desc.grid(row=3, column=1, sticky="ew", pady=6)
 
-    # Monto
     ctk.CTkLabel(card, text="Monto ($):", text_color=TEXT,
                  font=ctk.CTkFont("Segoe UI", font_lbl)).grid(row=3, column=2, sticky="e", padx=(0, 8), pady=6)
     ent_monto = ctk.CTkEntry(card, height=entry_h, width=140)
@@ -85,12 +115,40 @@ def open_win_list(parent: ctk.CTk):
     actions = ctk.CTkFrame(card, fg_color=CARD_BG)
     actions.grid(row=4, column=0, columnspan=4, sticky="e", pady=6, padx=pad_card)
 
+    # Estado interno: mapeo 1:1 lista ↔ CSV
+    # lb_items[i] = {"csv_index", "desc", "cat", "monto", "fecha"}
+    lb_items: list[dict] = []
+    CATS = _load_categorias_list()
+
+    def _format_row_text(desc: str, cat: str, monto_val: float) -> str:
+        return f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}"
+
+    def _reload_rows_meta_from_csv():
+        lb.delete(0, "end")
+        lb_items.clear()
+        rows = load_gastos()
+        for idx, r in enumerate(rows):
+            desc  = (r.get("descripcion") or "").strip()
+            cat   = (r.get("categoria") or "Otros").strip()
+            monto_txt = (r.get("monto") or "0").strip()
+            try:
+                monto_val = float(monto_txt.replace(",", "")) if monto_txt else 0.0
+            except ValueError:
+                monto_val = 0.0
+            lb.insert("end", _format_row_text(desc, cat, monto_val))
+            lb_items.append({
+                "csv_index": idx,
+                "desc": desc,
+                "cat": cat,
+                "monto": monto_val,
+                "fecha": (r.get("fecha") or "").strip(),
+            })
+
     def agregar():
         desc = (ent_desc.get() or "").strip()
         if not desc:
             messagebox.showwarning("Aviso", "Escribe la descripción del gasto.")
             return
-
         monto_txt = (ent_monto.get() or "").strip()
         try:
             monto_val = float(monto_txt) if monto_txt else 0.0
@@ -98,35 +156,129 @@ def open_win_list(parent: ctk.CTk):
             messagebox.showwarning("Aviso", "Monto inválido. Usa un número (ej. 120.50).")
             return
 
-        # ----- IA: primero GEMINI, si no ayuda -> OPENAI (que ya cae a local si falla) -----
+        # IA: Gemini → OpenAI → Local
         cat = clasificar_texto_gemini(desc)
         if cat == "Otros":
             cat = clasificar_texto_openai(desc)
 
-        # 2) UI
-        lb.insert("end", f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}")
+        # Persistir (al final del CSV)
+        append_gasto(descripcion=desc, categoria=cat, monto=monto_val)
 
-        # 3) Limpiar campos
+        # Recargar mapeo/visualización
+        _reload_rows_meta_from_csv()
+
+        # Limpiar campos
         ent_desc.delete(0, "end")
         ent_monto.delete(0, "end")
-
-        # 4) Persistencia CSV
-        append_gasto(descripcion=desc, categoria=cat, monto=monto_val)
 
     def eliminar():
         sel = lb.curselection()
         if not sel:
             return
-        lb.delete(sel[0])  # solo borra de la vista
+        idx = sel[0]
+        # Solo borra de la vista y del mapping local (no del CSV, por simplicidad)
+        lb.delete(idx)
+        lb_items.pop(idx)
 
     def limpiar():
         if lb.size() == 0:
             return
         if messagebox.askyesno("Confirmar", "¿Limpiar todos los gastos? (lista + CSV)"):
             lb.delete(0, "end")
-            clear_gastos()
+            lb_items.clear()
+            clear_gastos()  # deja encabezado
 
-    # Botones
+    # ---- NUEVO: Editar categoría/descripcion/monto ----
+    def editar():
+        sel = lb.curselection()
+        if not sel:
+            messagebox.showinfo("Editar", "Selecciona un gasto de la lista.")
+            return
+        i = sel[0]
+        meta = lb_items[i]
+        current_cat = meta["cat"]
+        current_desc = meta["desc"]
+        current_monto = meta["monto"]
+
+        # Diálogo
+        dlg = ctk.CTkToplevel(win)
+        dlg.title("Editar gasto")
+        dlg.transient(win)
+        dlg.grab_set()
+        dlg.minsize(500, 280)
+
+        frame = ctk.CTkFrame(dlg, fg_color=CARD_BG, corner_radius=10)
+        frame.pack(fill="both", expand=True, padx=16, pady=16)
+
+        # Descripción
+        ctk.CTkLabel(frame, text="Descripción:", text_color=TEXT,
+                     font=ctk.CTkFont("Segoe UI", 12)).grid(row=0, column=0, sticky="w")
+        ent_desc_edit = ctk.CTkEntry(frame, width=360)
+        ent_desc_edit.grid(row=0, column=1, sticky="w", pady=(0, 8))
+        ent_desc_edit.insert(0, current_desc)
+
+        # Monto
+        ctk.CTkLabel(frame, text="Monto ($):", text_color=TEXT,
+                     font=ctk.CTkFont("Segoe UI", 12)).grid(row=1, column=0, sticky="w")
+        ent_monto_edit = ctk.CTkEntry(frame, width=180)
+        ent_monto_edit.grid(row=1, column=1, sticky="w", pady=(0, 8))
+        ent_monto_edit.insert(0, f"{current_monto:.2f}")
+
+        # Categoría
+        ctk.CTkLabel(frame, text="Categoría:", text_color=TEXT,
+                     font=ctk.CTkFont("Segoe UI", 12)).grid(row=2, column=0, sticky="w")
+        cmb = ctk.CTkComboBox(frame, values=CATS, state="readonly", width=360)
+        try:
+            pre = CATS.index(current_cat) if current_cat in CATS else 0
+        except Exception:
+            pre = 0
+        cmb.set(CATS[pre] if CATS else current_cat)
+        cmb.grid(row=2, column=1, sticky="w", pady=(0, 12))
+
+        # Botones
+        btns = ctk.CTkFrame(frame, fg_color=CARD_BG)
+        btns.grid(row=3, column=0, columnspan=2, sticky="e")
+
+        def _guardar_cambio():
+            new_desc = (ent_desc_edit.get() or "").strip()
+            new_monto_txt = (ent_monto_edit.get() or "").strip()
+            new_cat = (cmb.get() or "").strip() or current_cat
+
+            if not new_desc:
+                messagebox.showwarning("Aviso", "La descripción no puede estar vacía.")
+                return
+            try:
+                new_monto = float(new_monto_txt.replace(",", "")) if new_monto_txt else 0.0
+            except ValueError:
+                messagebox.showwarning("Aviso", "Monto inválido.")
+                return
+
+            # 1) Actualizar CSV
+            rows = load_gastos()
+            csv_idx = meta["csv_index"]
+            if 0 <= csv_idx < len(rows):
+                rows[csv_idx]["descripcion"] = new_desc
+                rows[csv_idx]["categoria"] = new_cat
+                rows[csv_idx]["monto"] = f"{new_monto:.2f}"
+                try:
+                    save_all_gastos(rows)
+                except Exception as e:
+                    messagebox.showerror("Error", f"No se pudo guardar el cambio:\n{e}")
+                    return
+
+            # 2) Refrescar UI
+            _reload_rows_meta_from_csv()
+            dlg.destroy()
+
+        ctk.CTkButton(btns, text="Guardar",
+                      fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
+                      corner_radius=8, command=_guardar_cambio).pack(side="right", padx=6)
+        ctk.CTkButton(btns, text="Cancelar",
+                      fg_color="white", hover_color="#F8FAFF",
+                      text_color=TEXT, border_color=SEPARATOR, border_width=2,
+                      corner_radius=8, command=dlg.destroy).pack(side="right", padx=6)
+
+    # Botones principales
     ctk.CTkButton(
         actions, text="Agregar gasto",
         fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
@@ -150,7 +302,16 @@ def open_win_list(parent: ctk.CTk):
         command=limpiar
     ).pack(side="left", padx=6)
 
-    # ---------- Lista de gastos ----------
+    # NUEVO: botón Editar
+    ctk.CTkButton(
+        actions, text="Editar seleccionado",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=TEXT, border_color=SEPARATOR, border_width=2,
+        height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
+        command=editar
+    ).pack(side="left", padx=6)
+
+    # ---------- Lista ----------
     list_container = ctk.CTkFrame(card, fg_color=BG, corner_radius=radius)
     list_container.grid(row=5, column=0, columnspan=4, sticky="nsew", padx=pad_card, pady=(8, 0))
     card.grid_rowconfigure(5, weight=1)
@@ -166,21 +327,11 @@ def open_win_list(parent: ctk.CTk):
     sb.grid(row=0, column=1, sticky="ns")
     lb.config(yscrollcommand=sb.set)
 
-    # Cargar CSV existente al abrir
-    for r in load_gastos():
-        desc  = (r.get("descripcion") or "").strip()
-        cat   = (r.get("categoria") or "Otros").strip()
-        monto = r.get("monto", "0.00")
-        try:
-            monto_val = float(monto)
-        except ValueError:
-            monto_val = 0.0
-        lb.insert("end", f"{desc}  —  [{cat}]  —  ${monto_val:,.2f}")
+    # Cargar CSV al abrir
+    _reload_rows_meta_from_csv()
 
     # Enter = agregar directo
-    def _on_enter(event):
-        agregar()
-    ent_desc.bind("<Return>", _on_enter)
+    ent_desc.bind("<Return>", lambda e: agregar())
 
     # ---------- Pie ----------
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\

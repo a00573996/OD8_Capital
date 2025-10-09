@@ -76,6 +76,23 @@ def clear_gastos(write_header: bool = True) -> None:
         if write_header:
             writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
             writer.writeheader()
+            
+def save_all_gastos(rows: list[dict]) -> None:
+    """
+    Reescribe 'gastos.csv' con la lista recibida (debe incluir encabezados correctos).
+    Cada item: {"fecha": str, "descripcion": str, "categoria": str, "monto": str/float}
+    """
+    GASTOS_CSV.parent.mkdir(parents=True, exist_ok=True)
+    with open(GASTOS_CSV, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow({
+                "fecha": (r.get("fecha") or "").strip(),
+                "descripcion": (r.get("descripcion") or "").strip(),
+                "categoria": (r.get("categoria") or "").strip(),
+                "monto": f"{float(r.get('monto', 0) or 0):.2f}",
+            })
 
 def totals(rows: List[Dict[str, str]]) -> Tuple[float, Dict[str, float]]:
     """

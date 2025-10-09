@@ -4,46 +4,46 @@
     "edad": 18,
     "genero": "M",
     "ubicacion": {
-      "pais": "MX",
+      "pais": "1",
       "ciudad": "Leon"
     },
     "email": "David@example.com"
   },
   "ingresos": {
     "frecuencia": "Mensual",
-    "fijo_mensual": 100000.0
+    "fijo_mensual": 0.0
   },
   "situacion": {
     "ocupacion": "Estudiante",
-    "dependientes": 0,
+    "dependientes": 1,
     "vivienda": {
       "tipo": "Renta",
-      "gasto_mensual": 10000.0
+      "gasto_mensual": 0.0
     },
     "transporte": "Auto",
     "mascotas": {
       "tiene": true,
-      "tipo": "Perro"
+      "tipo": "1"
     },
-    "gasto_fijo_mensual": 90000.0,
+    "gasto_fijo_mensual": 40000.0,
     "deudas": {
       "tiene": true,
       "tipos": [
-        "Tarjeta"
+        "Varias"
       ],
-      "pago_mensual_total": 4000.0
+      "pago_mensual_total": 10.0
     },
     "habitos": {
-      "comer_fuera": 3,
-      "cafe_fuera": 4,
-      "compras_online": 2
+      "comer_fuera": 1,
+      "cafe_fuera": 1,
+      "compras_online": 1
     }
   },
   "metas": {
     "principal": "Inversión",
-    "monto_objetivo": 0.0,
-    "horizonte_meses": 12,
-    "aportacion_mensual": 3500.0,
+    "monto_objetivo": 100.0,
+    "horizonte_meses": 1,
+    "aportacion_mensual": 0.0,
     "fondo_emergencia_meses": 3
   },
   "preferencias": {
@@ -57,5 +57,5 @@
     },
     "consentimiento_datos_locales": true
   },
-  "ultima_actualizacion": "2025-10-08T21:05:16"
+  "ultima_actualizacion": "2025-10-08T22:13:27"
 }

@@ -1,1 +1,45 @@
+{
+  "usuario": {
+    "nombre": "Ana",
+    "edad": 22,
+    "genero": "F",
+    "ubicacion": {"pais": "MX", "ciudad": "Guadalajara"},
+    "email": "ana@example.com"
+  },
+  "ingresos": {
+    "frecuencia": "Mensual",
+    "fijo_mensual": 12000
+  },
+  "situacion": {
+    "ocupacion": "Estudiante",
+    "dependientes": 0,
+    "vivienda": {"tipo": "Renta", "gasto_mensual": 4500},
+    "transporte": "Público",
+    "mascotas": {"tiene": true, "tipo": "Perro"},
+    "gasto_fijo_mensual": 7000,
+    "deudas": {
+      "tiene": true,
+      "tipos": ["Tarjeta"],
+      "pago_mensual_total": 1200
+    },
+    "habitos": {
+      "comer_fuera": 3,
+      "cafe_fuera": 4,
+      "compras_online": 2
+    }
+  },
+  "metas": {
+    "principal": "Ahorro de emergencia",
+    "monto_objetivo": 20000,
+    "horizonte_meses": 6,
+    "aportacion_mensual": 3500,
+    "fondo_emergencia_meses": 3
+  },
+  "preferencias": {
+    "recordatorios": {"activo": true, "frecuencia": "Semanal"},
+    "alertas_sobrepresupuesto": {"activo": true, "umbral_porcentaje": 15},
+    "consentimiento_datos_locales": true
+  },
+  "ultima_actualizacion": "2025-10-08T12:34:56"
+}
 

@@ -1,26 +1,37 @@
 {
   "usuario": {
-    "nombre": "Ana",
-    "edad": 22,
-    "genero": "F",
-    "ubicacion": {"pais": "MX", "ciudad": "Guadalajara"},
-    "email": "ana@example.com"
+    "nombre": "David",
+    "edad": 18,
+    "genero": "M",
+    "ubicacion": {
+      "pais": "MX",
+      "ciudad": "Leon"
+    },
+    "email": "David@example.com"
   },
   "ingresos": {
     "frecuencia": "Mensual",
-    "fijo_mensual": 12000
+    "fijo_mensual": 100000.0
   },
   "situacion": {
     "ocupacion": "Estudiante",
     "dependientes": 0,
-    "vivienda": {"tipo": "Renta", "gasto_mensual": 4500},
-    "transporte": "Público",
-    "mascotas": {"tiene": true, "tipo": "Perro"},
-    "gasto_fijo_mensual": 7000,
+    "vivienda": {
+      "tipo": "Renta",
+      "gasto_mensual": 10000.0
+    },
+    "transporte": "Auto",
+    "mascotas": {
+      "tiene": true,
+      "tipo": "Perro"
+    },
+    "gasto_fijo_mensual": 90000.0,
     "deudas": {
       "tiene": true,
-      "tipos": ["Tarjeta"],
-      "pago_mensual_total": 1200
+      "tipos": [
+        "Tarjeta"
+      ],
+      "pago_mensual_total": 4000.0
     },
     "habitos": {
       "comer_fuera": 3,
@@ -29,17 +40,22 @@
     }
   },
   "metas": {
-    "principal": "Ahorro de emergencia",
-    "monto_objetivo": 20000,
-    "horizonte_meses": 6,
-    "aportacion_mensual": 3500,
+    "principal": "Inversión",
+    "monto_objetivo": 0.0,
+    "horizonte_meses": 12,
+    "aportacion_mensual": 3500.0,
     "fondo_emergencia_meses": 3
   },
   "preferencias": {
-    "recordatorios": {"activo": true, "frecuencia": "Semanal"},
-    "alertas_sobrepresupuesto": {"activo": true, "umbral_porcentaje": 15},
+    "recordatorios": {
+      "activo": true,
+      "frecuencia": "Semanal"
+    },
+    "alertas_sobrepresupuesto": {
+      "activo": true,
+      "umbral_porcentaje": 15
+    },
     "consentimiento_datos_locales": true
   },
-  "ultima_actualizacion": "2025-10-08T12:34:56"
+  "ultima_actualizacion": "2025-10-08T21:05:16"
 }
-

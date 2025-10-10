@@ -1,10 +1,10 @@
 # main.py — ZAVE (Versión A adaptable, outlined en AZUL)
 import customtkinter as ctk
-from app.win_home import open_win_home
+from app.win_home import open_win_home      # ahora es Perfil de usuario
 from app.win_form import open_win_form
 from app.win_list import open_win_list
 from app.win_table import open_win_table
-from app.win_canvas import open_win_canvas
+# from app.win_canvas import open_win_canvas  # ELIMINADO
 
 APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
 APP_VERSION = "v0.1"
@@ -23,19 +23,19 @@ DANGER_DARK        = "#B02A37"
 def _init_theme():
     """Inicializa el tema en modo claro (sin dark)."""
     ctk.set_appearance_mode("light")
-    ctk.set_default_color_theme("green")  # base interna de CTk; personalizamos colores manualmente abajo
+    ctk.set_default_color_theme("green")  # CTk internamente; personalizamos visual con props
 
 def main():
     _init_theme()
 
     root = ctk.CTk()
     root.title(APP_TITLE)
-    root.state("zoomed")  # maximiza para aprovechar la resolución del equipo
+    root.state("zoomed")  # maximiza
 
     # --- Escalado adaptable respecto a 1920x1080 ---
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     scale_w, scale_h = sw / 1920, sh / 1080
-    scale = min(scale_w, scale_h)  # proporcional, respeta la relación
+    scale = min(scale_w, scale_h)
 
     # Tamaños derivados
     radius        = max(8, int(10 * scale))
@@ -64,7 +64,7 @@ def main():
 
     # ---------- Encabezado ----------
     ctk.CTkLabel(
-        card, text="💰\u2003ZAVE",  # \u2003 = espacio fino entre icono y texto
+        card, text="💰\u2003ZAVE",
         text_color=TEXT,
         font=ctk.CTkFont("Segoe UI Semibold", font_title)
     ).pack(pady=(pad_top_title, pad_between))
@@ -91,8 +91,8 @@ def main():
             parent,
             text=text,
             command=command,
-            fg_color="white",                # fondo blanco
-            hover_color="#EEF2FF",           # tinte azul MUY suave al hover
+            fg_color="white",
+            hover_color="#EEF2FF",
             text_color=PRIMARY_BLUE,
             border_color=PRIMARY_BLUE,
             border_width=2,
@@ -103,11 +103,11 @@ def main():
         )
 
     # ---------- Botones de menú ----------
-    nav_button(card, "🏠\u2003Home / Bienvenida",        lambda: open_win_home(root)).pack(pady=pad_between)
+    nav_button(card, "👤\u2003Perfil de usuario",        lambda: open_win_home(root)).pack(pady=pad_between)
     nav_button(card, "💵\u2003Ingresos",                  lambda: open_win_form(root)).pack(pady=pad_between)
     nav_button(card, "🧾\u2003Registro de Gastos",        lambda: open_win_list(root)).pack(pady=pad_between)
     nav_button(card, "📊\u2003Reporte de Gastos",         lambda: open_win_table(root)).pack(pady=pad_between)
-    nav_button(card, "📈\u2003Reporte Gráfico de Gastos", lambda: open_win_canvas(root)).pack(pady=pad_between)
+    # nav_button(card, "📈\u2003Reporte Gráfico de Gastos", lambda: open_win_canvas(root)).pack(pady=pad_between)  # ELIMINADO
 
     # Separador inferior (corto)
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\

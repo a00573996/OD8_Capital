@@ -142,7 +142,7 @@ def main():
 
     # ---------- Botones de menú ----------
     nav_button(card, "👤\u2003Perfil de usuario", lambda: open_win_home(root)).pack(pady=pad_between)
-    nav_button(card, "💵\u2003Ingresos",           lambda: open_win_form(root)).pack(pady=pad_between)
+    nav_button(card, "💵\u2003REgistro de Ingresos", lambda: open_win_form(root)).pack(pady=pad_between)
     nav_button(card, "🧾\u2003Registro de Gastos", lambda: open_win_list(root)).pack(pady=pad_between)
     nav_button(card, "📊\u2003Reporte de Gastos",  lambda: open_win_table(root)).pack(pady=pad_between)
 

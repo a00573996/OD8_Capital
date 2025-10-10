@@ -1,12 +1,11 @@
-# app/main.py — ZAVE (Menú principal adaptable, estilo azul, con logo)
+# main.py — ZAVE (cerrar Main y lanzar solo la ventana seleccionada)
 import customtkinter as ctk
-from pathlib import Path
-from PIL import Image, ImageTk
+import tkinter as tk
 
-from app.win_home import open_win_home        # Perfil de usuario
-from app.win_form import open_win_form        # Ingresos
-from app.win_list import open_win_list        # Registro de gastos
-from app.win_table import open_win_table      # Reporte de gastos (tabla + gráficas)
+from app.win_home import open_win_home      # Perfil de usuario
+from app.win_form import open_win_form      # Ingresos
+from app.win_list import open_win_list      # Registro de gastos
+from app.win_table import open_win_table    # Reporte de gastos
 
 APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
 APP_VERSION = "v0.1"
@@ -23,52 +22,73 @@ DANGER             = "#DC3545"
 DANGER_DARK        = "#B02A37"
 
 def _init_theme():
-    """Inicializa el tema en modo claro (sin dark)."""
     ctk.set_appearance_mode("light")
-    # El tema base de CTk no afecta nuestro esquema porque definimos colores por props
     ctk.set_default_color_theme("green")
 
-def _load_logo_images():
+def _nav_button(parent, text, command, *, radius, font_btn, btn_h, btn_w):
+    return ctk.CTkButton(
+        parent,
+        text=text,
+        command=command,
+        fg_color="white",
+        hover_color="#EEF2FF",
+        text_color=PRIMARY_BLUE,
+        border_color=PRIMARY_BLUE,
+        border_width=2,
+        corner_radius=radius,
+        font=ctk.CTkFont("Segoe UI", font_btn, "bold"),
+        height=btn_h,
+        width=btn_w
+    )
+
+def go_to(open_window_fn, current_root: ctk.CTk):
     """
-    Carga el logo desde /assets/ZAVE LOGO.png.
-    Devuelve (icon_tk, ctk_img_48) donde:
-      - icon_tk: PhotoImage para icono de ventana
-      - ctk_img_48: CTkImage para encabezado (48x48)
-    Si no existe, devuelve (None, None).
+    Cierra el Main y abre SOLO la ventana destino.
+    - Crea un nuevo root oculto
+    - Llama a open_window_fn(new_root) que creará un Toplevel
+    - Vincula el cierre del Toplevel para terminar la app
     """
+    # 1) Cerrar Main
     try:
-        icon_path = Path(__file__).resolve().parents[1] / "assets" / "ZAVE LOGO.png"
-        if not icon_path.exists():
-            return None, None
-        img = Image.open(icon_path)
-        icon_tk = ImageTk.PhotoImage(img)  # para root.iconphoto
-        ctk_img_48 = ctk.CTkImage(light_image=img, size=(48, 48))
-        return icon_tk, ctk_img_48
-    except Exception as e:
-        print(f"[Advertencia] No se pudo cargar el logo: {e}")
-        return None, None
+        current_root.destroy()
+    except Exception:
+        pass
+
+    # 2) Nuevo root oculto
+    new_root = ctk.CTk()
+    new_root.withdraw()  # no queremos que se vea el root en blanco
+    try:
+        new_root.state("zoomed")
+    except Exception:
+        new_root.geometry("1280x800")
+
+    # 3) Crear la ventana destino (Toplevel)
+    open_window_fn(new_root)
+
+    # 4) Enlazar cierre del Toplevel para terminar la app
+    #    (buscamos el/los toplevel creados por la función)
+    for w in new_root.winfo_children():
+        # customtkinter genera CTkToplevel que hereda de Toplevel
+        if isinstance(w, (ctk.CTkToplevel, tk.Toplevel)):
+            w.protocol("WM_DELETE_WINDOW", new_root.destroy)
+
+    # 5) Mostrar solo la ventana destino (el root queda oculto)
+    new_root.mainloop()
 
 def main():
     _init_theme()
 
     root = ctk.CTk()
     root.title(APP_TITLE)
-    root.state("zoomed")  # maximiza
+    try:
+        root.state("zoomed")
+    except Exception:
+        root.geometry("1280x800")
 
-    # Icono de ventana y logo de encabezado
-    icon_tk, ctk_logo_48 = _load_logo_images()
-    if icon_tk:
-        try:
-            root.iconphoto(True, icon_tk)
-        except Exception as e:
-            print(f"[Advertencia] iconphoto: {e}")
-
-    # --- Escalado adaptable respecto a 1920x1080 ---
+    # Escalado
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
-    scale_w, scale_h = sw / 1920, sh / 1080
-    scale = min(scale_w, scale_h)
+    scale  = min(sw/1920, sh/1080)
 
-    # Tamaños derivados
     radius        = max(8, int(10 * scale))
     font_title    = max(20, int(34 * scale))
     font_chip     = max(10, int(13 * scale))
@@ -85,29 +105,19 @@ def main():
     pad_after_sep = max(12, int(18 * scale))
     pad_footer    = max(6,  int(8 * scale))
 
-    # ---------- Lienzo general ----------
+    # Lienzo
     outer = ctk.CTkFrame(root, fg_color=BG)
     outer.pack(fill="both", expand=True, padx=pad_outer, pady=pad_outer)
 
-    # ---------- Tarjeta central ----------
     card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
     card.pack(expand=True, padx=pad_card_x, pady=pad_card_y)
 
-    # ---------- Encabezado (logo + título) ----------
-    header = ctk.CTkFrame(card, fg_color=CARD_BG)
-    header.pack(pady=(pad_top_title, pad_between))
-
-    if ctk_logo_48:
-        ctk.CTkLabel(header, image=ctk_logo_48, text="").pack(side="left", padx=(0, 10))
-
     ctk.CTkLabel(
-        header,
-        text="ZAVE",
+        card, text="💰\u2003ZAVE",
         text_color=TEXT,
         font=ctk.CTkFont("Segoe UI Semibold", font_title)
-    ).pack(side="left")
+    ).pack(pady=(pad_top_title, pad_between))
 
-    # Chip de versión
     ctk.CTkLabel(
         card,
         text=f"Versión {APP_VERSION}",
@@ -119,38 +129,29 @@ def main():
         font=ctk.CTkFont("Segoe UI", font_chip)
     ).pack()
 
-    # Separador corto
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .pack(fill="x", padx=pad_sep_x, pady=(pad_between * 2, pad_after_sep))
 
-    # ---------- Botón outlined AZUL ----------
-    def nav_button(parent, text, command):
-        return ctk.CTkButton(
-            parent,
-            text=text,
-            command=command,
-            fg_color="white",
-            hover_color="#EEF2FF",
-            text_color=PRIMARY_BLUE,
-            border_color=PRIMARY_BLUE,
-            border_width=2,
-            corner_radius=radius,
-            font=ctk.CTkFont("Segoe UI", font_btn, "bold"),
-            height=btn_h,
-            width=btn_w
-        )
+    # Botones -> usan go_to(...) para cerrar Main y abrir la ventana
+    _nav_button(card, "👤\u2003Perfil de Usuario",
+                lambda: go_to(open_win_home, root),
+                radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
-    # ---------- Botones de menú ----------
-    nav_button(card, "👤\u2003Perfil de usuario", lambda: open_win_home(root)).pack(pady=pad_between)
-    nav_button(card, "💵\u2003REgistro de Ingresos", lambda: open_win_form(root)).pack(pady=pad_between)
-    nav_button(card, "🧾\u2003Registro de Gastos", lambda: open_win_list(root)).pack(pady=pad_between)
-    nav_button(card, "📊\u2003Reporte de Gastos",  lambda: open_win_table(root)).pack(pady=pad_between)
+    _nav_button(card, "💵\u2003Ingresos",
+                lambda: go_to(open_win_form, root),
+                radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
-    # Separador inferior (corto)
+    _nav_button(card, "🧾\u2003Registro de Gastos",
+                lambda: go_to(open_win_list, root),
+                radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
+
+    _nav_button(card, "📊\u2003Reporte de Gastos",
+                lambda: go_to(open_win_table, root),
+                radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
+
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .pack(fill="x", padx=pad_sep_x, pady=(pad_after_sep * 1.2, pad_between * 1.5))
 
-    # ---------- Botón Salir (rojo) ----------
     ctk.CTkButton(
         card,
         text="🚪\u2003Salir",
@@ -164,7 +165,6 @@ def main():
         width=btn_w
     ).pack(pady=(pad_between, pad_top_title))
 
-    # ---------- Pie de página ----------
     ctk.CTkLabel(
         outer,
         text="ZAVE — (ODS 8)",

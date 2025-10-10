@@ -1,4 +1,4 @@
-# app/win_home.py — ZAVE (Perfil con validación inline robusta, errores a la derecha del label)
+# app/win_home.py — ZAVE (Perfil con validación inline robusta, sin ingreso/frecuencia en Perfil)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -345,15 +345,10 @@ def open_win_home(parent: ctk.CTk):
     ent_email.bind("<FocusOut>", _email_focusout)
     row += 1
 
-    ctk.CTkLabel(tab_gen, text="Frecuencia de ingreso", text_color=TEXT).grid(row=row, column=0, sticky="w", padx=pad, pady=4)
-    cmb_freq = ctk.CTkComboBox(tab_gen, state="readonly", values=["Mensual", "Quincenal", "Semanal", "Diario"], width=200)
-    cmb_freq.grid(row=row, column=1, sticky="w", padx=pad, pady=4)
-    row += 1
-
-    ctk.CTkLabel(tab_gen, text="Ingreso fijo mensual", text_color=TEXT).grid(row=row, column=0, sticky="w", padx=pad, pady=4)
-    ent_ingreso_fijo = ctk.CTkEntry(tab_gen, width=160)
-    ent_ingreso_fijo.grid(row=row, column=1, sticky="w", padx=pad, pady=(4, pad))
-    bind_money(ent_ingreso_fijo, min_val=0.0, max_val=1_000_000_000, required=False, field_name="Ingreso fijo mensual")
+    # >>>> NOTA: Se eliminaron de PERFIL estos campos:
+    # - Frecuencia de ingreso
+    # - Ingreso fijo mensual
+    # Ahora se gestionan exclusivamente en la ventana de "Ingresos".
 
     # ---------- TAB SITUACIÓN ----------
     row = 0
@@ -517,10 +512,12 @@ def open_win_home(parent: ctk.CTk):
         ent_ciudad.insert(0, u.get("ubicacion", {}).get("ciudad", ""))
         ent_email.insert(0, u.get("email", ""))
 
-        ing = state["ingresos"]
-        cmb_freq.set(ing.get("frecuencia", "Mensual"))
-        ent_ingreso_fijo.insert(0, f"{float(ing.get('fijo_mensual', 0.0)):,.2f}")
+        # Ingresos: SOLO lectura desde estado (editables en ventana "Ingresos")
+        ing = state.get("ingresos", {})
+        ingreso_fijo_ro = float(ing.get("fijo_mensual", 0.0) or 0.0)
+        freq_ro         = ing.get("frecuencia", "Mensual")
 
+        # Situación
         s = state["situacion"]
         cmb_ocup.set(s.get("ocupacion", "Estudiante"))
         ent_dep.insert(0, str(s.get("dependientes", 0)))
@@ -564,27 +561,36 @@ def open_win_home(parent: ctk.CTk):
 
         # Inicializar "último válido"
         for e in (ent_nombre, ent_edad, ent_ciudad, ent_email,
-                  ent_ingreso_fijo, ent_dep, ent_gasto_viv,
+                  ent_dep, ent_gasto_viv,
                   ent_h_comer, ent_h_cafe, ent_h_online,
                   ent_deu_pago, ent_gasto_fijo,
                   ent_meta_monto, ent_meta_meses, ent_meta_aport, ent_umbral, ent_tipo_masc):
             remember_valid(e)
 
+        # Actualiza resumen con ingreso de SOLO lectura
+        _update_summary(ingreso_fijo_ro, freq_ro)
+
     # --------- Resumen ----------
-    def _update_summary():
-        ingreso     = parse_money_strict(ent_ingreso_fijo.get()) or 0.0
+    def _update_summary(ingreso_fijo_ro: float | None = None, freq_ro: str | None = None):
+        # Ingreso desde estado (read-only)
+        if ingreso_fijo_ro is None or freq_ro is None:
+            ing = state.get("ingresos", {})
+            ingreso_fijo_ro = float(ing.get("fijo_mensual", 0.0) or 0.0)
+            freq_ro         = ing.get("frecuencia", "Mensual")
+
+        # Gastos y deudas
         gasto_viv   = parse_money_strict(ent_gasto_viv.get()) or 0.0
         gasto_fijo  = parse_money_strict(ent_gasto_fijo.get()) or 0.0
         pago_deuda  = parse_money_strict(ent_deu_pago.get()) or 0.0
         if (cmb_deuda_tipo.get() or "") == "No tengo":
             pago_deuda = 0.0
 
-        capacidad = max(0.0, ingreso - (gasto_viv + gasto_fijo + pago_deuda))
-        cap_pct = (capacidad / ingreso) if ingreso > 0 else 0.0
+        capacidad = max(0.0, ingreso_fijo_ro - (gasto_viv + gasto_fijo + pago_deuda))
+        cap_pct = (capacidad / ingreso_fijo_ro) if ingreso_fijo_ro > 0 else 0.0
         cap_pct = max(0.0, min(1.0, cap_pct))
 
         lbl_ing.configure(
-            text=f"Ingreso fijo: ${ingreso:,.2f}   |   Vivienda: ${gasto_viv:,.2f}   |   Fijos: ${gasto_fijo:,.2f}   |   Deudas: ${pago_deuda:,.2f}"
+            text=f"Ingreso (solo lectura): ${ingreso_fijo_ro:,.2f}  ·  Frecuencia: {freq_ro}"
         )
         pb_cap.set(cap_pct)
         lbl_cap.configure(text=f"Capacidad estimada: ${capacidad:,.2f}  ({cap_pct*100:.1f}% del ingreso)")
@@ -604,9 +610,9 @@ def open_win_home(parent: ctk.CTk):
     # --------- Guardar ----------
     def _validate_all_inline() -> bool:
         err.clear_all()
-        # Disparar validación onBlur de campos
+        # Disparar validación onBlur de campos (ya SIN ingreso/frecuencia)
         for e in (ent_nombre, ent_edad, ent_email,
-                  ent_ingreso_fijo, ent_dep, ent_gasto_viv,
+                  ent_dep, ent_gasto_viv,
                   ent_h_comer, ent_h_cafe, ent_h_online,
                   ent_deu_pago, ent_gasto_fijo,
                   ent_meta_monto, ent_meta_meses, ent_meta_aport,
@@ -633,8 +639,7 @@ def open_win_home(parent: ctk.CTk):
         state["usuario"]["ubicacion"]["ciudad"] = ent_ciudad.get().strip()
         state["usuario"]["email"] = ent_email.get().strip()
 
-        state["ingresos"]["frecuencia"] = cmb_freq.get()
-        state["ingresos"]["fijo_mensual"] = parse_money_strict(ent_ingreso_fijo.get()) or 0.0
+        # Ingresos: no se editan aquí. Mantener lo que haya en state["ingresos"] (lo actualiza la ventana Ingresos)
 
         state["situacion"]["ocupacion"] = cmb_ocup.get()
         state["situacion"]["dependientes"] = to_int(ent_dep.get(), 0) or 0
@@ -668,7 +673,7 @@ def open_win_home(parent: ctk.CTk):
 
         try:
             save_profile(state)
-            _update_summary()
+            _update_summary()  # recalcula con ingreso RO cargado del state
             messagebox.showinfo("OK", "Perfil guardado correctamente.")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo guardar el perfil:\n{e}")
@@ -689,4 +694,3 @@ def open_win_home(parent: ctk.CTk):
     # ---------- Inicializar ----------
     state = load_profile()
     _load_to_widgets()
-    _update_summary()

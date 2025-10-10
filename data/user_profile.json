@@ -11,7 +11,7 @@
   },
   "ingresos": {
     "frecuencia": "Mensual",
-    "fijo_mensual": 0.0
+    "fijo_mensual": 100000.0
   },
   "situacion": {
     "ocupacion": "Estudiante",
@@ -57,5 +57,5 @@
     },
     "consentimiento_datos_locales": true
   },
-  "ultima_actualizacion": "2025-10-08T22:13:27"
+  "ultima_actualizacion": "2025-10-10T10:19:47"
 }

@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Ejecutar app.main",
+      "name": "Ejecutar ZAVE (splash + main)",
       "type": "debugpy",
       "request": "launch",
-      "module": "app.main",
+      "module": "app.start",
       "console": "integratedTerminal",
       "justMyCode": true,
       "cwd": "${workspaceFolder}/APPODS",
@@ -13,4 +13,5 @@
     }
   ]
 }
+
 

@@ -31,7 +31,7 @@ def run_splash_then(callback, duration_ms=1800):
     card.pack(fill="both", expand=True, padx=18, pady=18)
 
     # Logo
-    icon_path = Path(__file__).resolve().parents[1] / "assets" / "logo_zave.png"
+    icon_path = Path(__file__).resolve().parents[1] / "assets" / "ZAVE LOGO.png"
     if icon_path.exists():
         logo_img = ctk.CTkImage(light_image=Image.open(icon_path), size=(96, 96))
         ctk.CTkLabel(card, image=logo_img, text="").pack(pady=(28, 8))

@@ -1,10 +1,12 @@
-# main.py — ZAVE (Versión A adaptable, outlined en AZUL)
+# app/main.py — ZAVE (Menú principal adaptable, estilo azul, con logo)
 import customtkinter as ctk
-from app.win_home import open_win_home      # ahora es Perfil de usuario
-from app.win_form import open_win_form
-from app.win_list import open_win_list
-from app.win_table import open_win_table
-# from app.win_canvas import open_win_canvas  # ELIMINADO
+from pathlib import Path
+from PIL import Image, ImageTk
+
+from app.win_home import open_win_home        # Perfil de usuario
+from app.win_form import open_win_form        # Ingresos
+from app.win_list import open_win_list        # Registro de gastos
+from app.win_table import open_win_table      # Reporte de gastos (tabla + gráficas)
 
 APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
 APP_VERSION = "v0.1"
@@ -23,7 +25,28 @@ DANGER_DARK        = "#B02A37"
 def _init_theme():
     """Inicializa el tema en modo claro (sin dark)."""
     ctk.set_appearance_mode("light")
-    ctk.set_default_color_theme("green")  # CTk internamente; personalizamos visual con props
+    # El tema base de CTk no afecta nuestro esquema porque definimos colores por props
+    ctk.set_default_color_theme("green")
+
+def _load_logo_images():
+    """
+    Carga el logo desde /assets/ZAVE LOGO.png.
+    Devuelve (icon_tk, ctk_img_48) donde:
+      - icon_tk: PhotoImage para icono de ventana
+      - ctk_img_48: CTkImage para encabezado (48x48)
+    Si no existe, devuelve (None, None).
+    """
+    try:
+        icon_path = Path(__file__).resolve().parents[1] / "assets" / "ZAVE LOGO.png"
+        if not icon_path.exists():
+            return None, None
+        img = Image.open(icon_path)
+        icon_tk = ImageTk.PhotoImage(img)  # para root.iconphoto
+        ctk_img_48 = ctk.CTkImage(light_image=img, size=(48, 48))
+        return icon_tk, ctk_img_48
+    except Exception as e:
+        print(f"[Advertencia] No se pudo cargar el logo: {e}")
+        return None, None
 
 def main():
     _init_theme()
@@ -31,6 +54,14 @@ def main():
     root = ctk.CTk()
     root.title(APP_TITLE)
     root.state("zoomed")  # maximiza
+
+    # Icono de ventana y logo de encabezado
+    icon_tk, ctk_logo_48 = _load_logo_images()
+    if icon_tk:
+        try:
+            root.iconphoto(True, icon_tk)
+        except Exception as e:
+            print(f"[Advertencia] iconphoto: {e}")
 
     # --- Escalado adaptable respecto a 1920x1080 ---
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
@@ -62,12 +93,19 @@ def main():
     card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
     card.pack(expand=True, padx=pad_card_x, pady=pad_card_y)
 
-    # ---------- Encabezado ----------
+    # ---------- Encabezado (logo + título) ----------
+    header = ctk.CTkFrame(card, fg_color=CARD_BG)
+    header.pack(pady=(pad_top_title, pad_between))
+
+    if ctk_logo_48:
+        ctk.CTkLabel(header, image=ctk_logo_48, text="").pack(side="left", padx=(0, 10))
+
     ctk.CTkLabel(
-        card, text="💰\u2003ZAVE",
+        header,
+        text="ZAVE",
         text_color=TEXT,
         font=ctk.CTkFont("Segoe UI Semibold", font_title)
-    ).pack(pady=(pad_top_title, pad_between))
+    ).pack(side="left")
 
     # Chip de versión
     ctk.CTkLabel(
@@ -103,11 +141,10 @@ def main():
         )
 
     # ---------- Botones de menú ----------
-    nav_button(card, "👤\u2003Perfil de usuario",        lambda: open_win_home(root)).pack(pady=pad_between)
-    nav_button(card, "💵\u2003Ingresos",                  lambda: open_win_form(root)).pack(pady=pad_between)
-    nav_button(card, "🧾\u2003Registro de Gastos",        lambda: open_win_list(root)).pack(pady=pad_between)
-    nav_button(card, "📊\u2003Reporte de Gastos",         lambda: open_win_table(root)).pack(pady=pad_between)
-    # nav_button(card, "📈\u2003Reporte Gráfico de Gastos", lambda: open_win_canvas(root)).pack(pady=pad_between)  # ELIMINADO
+    nav_button(card, "👤\u2003Perfil de usuario", lambda: open_win_home(root)).pack(pady=pad_between)
+    nav_button(card, "💵\u2003Ingresos",           lambda: open_win_form(root)).pack(pady=pad_between)
+    nav_button(card, "🧾\u2003Registro de Gastos", lambda: open_win_list(root)).pack(pady=pad_between)
+    nav_button(card, "📊\u2003Reporte de Gastos",  lambda: open_win_table(root)).pack(pady=pad_between)
 
     # Separador inferior (corto)
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\

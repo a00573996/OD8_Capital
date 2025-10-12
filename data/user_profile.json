@@ -63,8 +63,56 @@
     },
     "consentimiento_datos_locales": true
   },
-  "ultima_actualizacion": "2025-10-12T11:03:07",
+  "ultima_actualizacion": "2025-10-12T11:27:48",
   "totales": {
     "ingreso_total_estimado": 100100.0
+  },
+  "classification": {
+    "generated_from": "profile.json",
+    "metrics": {
+      "ingreso_total_mensual": 100100.0,
+      "ingreso_fijo": 100000.0,
+      "ingreso_variables": 100.0,
+      "volatilidad_ingreso": 0.001,
+      "carga_vivienda": 0.0,
+      "carga_deuda": 0.0001,
+      "carga_fijos": 0.3996,
+      "capacidad_ahorro_pct": 0.6003,
+      "capacidad_ahorro_mxn": 60090.0,
+      "IGD": 20.0,
+      "meta_objetivo": 100.0,
+      "meta_meses": 1,
+      "aportacion_mensual": 0.0,
+      "ratio_aporte": 0.0
+    },
+    "labels": {
+      "segmento_ingreso": "Alto",
+      "estabilidad_ingreso": "Fijo",
+      "carga_vivienda": "Baja",
+      "carga_deuda": "Baja",
+      "carga_fijos": "Pesada",
+      "capacidad_ahorro": "Muy buena",
+      "aporte_meta": "Aporte insuficiente"
+    },
+    "perfil_consumo": {
+      "IGD": 20.0,
+      "nivel": "Bajo",
+      "tags": []
+    },
+    "etapa_vida": {
+      "ocupacion": "Estudiante",
+      "dependientes": 1
+    },
+    "vivienda": "Renta",
+    "movilidad": "Auto",
+    "mascotas": "Sí",
+    "metas": {
+      "principal": "Inversión",
+      "aporte_label": "Aporte insuficiente"
+    },
+    "persona": "Ingreso alto, vivienda baja, deuda baja, discrecional bajo, con dependientes",
+    "prioridades": [
+      "Fondo de emergencia 3–6 meses"
+    ]
   }
 }

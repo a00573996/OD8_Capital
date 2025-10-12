@@ -5,6 +5,8 @@ from tkinter import messagebox
 import re
 
 from core.profile import load_profile, save_profile, is_valid_email, to_float, to_int
+from core.classifier import classify_user
+
 
 # Paleta (azul)
 PRIMARY_BLUE       = "#2563EB"
@@ -266,8 +268,16 @@ def open_win_home(parent: ctk.CTk):
         state["preferencias"]["recordatorios"]["frecuencia"] = cmb_rec_freq.get()
         state["preferencias"]["alertas_sobrepresupuesto"]["activo"] = bool(alert_var.get())
         state["preferencias"]["alertas_sobrepresupuesto"]["umbral_porcentaje"] = to_int(ent_umbral.get(), 15) or 15
-        state["preferencias"]["consentimiento_datos_locales"] = True
 
+        state["preferencias"]["consentimiento_datos_locales"] = True
+        try:
+            state["classification"] = classify_user(state)  # ← añade/actualiza la clasificación
+        except Exception as e:
+            # No bloquear el guardado si hay un detalle de clasificación
+            print("[WARN] classify_user falló:", e)
+
+        save_profile(state)
+        
         try:
             save_profile(state)
             _update_summary()  # recalcular tarjetas

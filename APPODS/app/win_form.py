@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import messagebox
 import re
 
+from core.classifier import classify_user
+
 from core.profile import load_profile, save_profile
 
 # Paleta coherente (azul)
@@ -267,6 +269,13 @@ def open_win_form(parent: ctk.CTk):
         total_vars = sum(x["monto"] for x in cont_vars)
         state.setdefault("totales", {})
         state["totales"]["ingreso_total_estimado"] = float(fijo_val) + total_vars
+
+        try:
+            state["classification"] = classify_user(state)  # recalcula con los nuevos ingresos
+        except Exception as e:
+            print("[WARN] classify_user falló:", e)
+
+        save_profile(state)
 
         try:
             save_profile(state)

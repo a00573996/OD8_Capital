@@ -8,6 +8,9 @@ from core.profile import load_profile, save_profile
 from core.classifier import classify_user
 from core.storage import load_gastos
 
+# NUEVO: navegación unificada a Inicio
+from app.utils.nav import go_home
+
 # Paleta
 PRIMARY_BLUE       = "#2563EB"
 PRIMARY_BLUE_DARK  = "#1D4ED8"
@@ -164,6 +167,9 @@ def open_win_reco(parent: ctk.CTk):
         win.geometry("1400x900")
     win.minsize(1280, 720)
 
+    # Lista de afters por si agregas animaciones (evita pyimageX al cerrar)
+    _afters: list[str] = []
+
     # Escala
     sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
     scale  = min(sw/1920, sh/1080)
@@ -194,25 +200,14 @@ def open_win_reco(parent: ctk.CTk):
     ctk.CTkLabel(header, text="Recomendaciones personalizadas", text_color=TEXT,
                  font=ctk.CTkFont("Segoe UI Semibold", font_h1)).pack(side="left")
 
-    # Botón Inicio (volver a main)
-    def _start_main():
-        try:
-            from app import main as app_main
-            app_main.main()
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo abrir Inicio:\n{e}")
-
+    # Botón Inicio (lógica unificada)
     def _go_home():
-        try:
-            win.withdraw()           # cerramos visualmente esta ventana
-            win.after(60, _start_main)
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo volver a Inicio:\n{e}")
+        go_home(win, parent, after_ids=_afters)
 
     ctk.CTkButton(
-        header, text="🏠 Inicio",
+        header, text="⟵ Inicio",
         fg_color="white", hover_color="#F8FAFF",
-        text_color=TEXT, border_color=SEPARATOR, border_width=2,
+        text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
         corner_radius=8, command=_go_home
     ).pack(side="right")
 
@@ -465,3 +460,6 @@ def open_win_reco(parent: ctk.CTk):
     # Ajustar scrollregion
     win.update_idletasks()
     canvas.configure(scrollregion=canvas.bbox("all"))
+
+    # Manejo del cierre por la X (igual que botón Inicio)
+    win.protocol("WM_DELETE_WINDOW", _go_home)

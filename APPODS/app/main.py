@@ -2,6 +2,9 @@
 import customtkinter as ctk
 import tkinter as tk
 
+import os
+from PIL import Image  # <-- NUEVO
+
 from app.win_home import open_win_home      # Perfil de usuario
 from app.win_form import open_win_form      # Ingresos
 from app.win_list import open_win_list      # Registro de gastos
@@ -112,11 +115,24 @@ def main():
     card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
     card.pack(expand=True, padx=pad_card_x, pady=pad_card_y)
 
-    ctk.CTkLabel(
-        card, text="💰\u2003ZAVE",
-        text_color=TEXT,
-        font=ctk.CTkFont("Segoe UI Semibold", font_title)
-    ).pack(pady=(pad_top_title, pad_between))
+    # --- Logo ZAVE ---
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.normpath(os.path.join(BASE_DIR, "..", "assets", "ZAVE LOGO.png"))
+
+    try:
+        # tamaño adaptable al escalar de pantalla
+        logo_size = max(96, int(120 * scale))
+        logo_img = ctk.CTkImage(light_image=Image.open(logo_path),
+                                dark_image=Image.open(logo_path),
+                                size=(logo_size, logo_size))
+        ctk.CTkLabel(card, image=logo_img, text="").pack(pady=(pad_top_title, pad_between))
+    except Exception as e:
+        # si el logo no se encuentra, mostramos solo el texto (fallback)
+        ctk.CTkLabel(
+            card, text="💰\u2003ZAVE",
+            text_color=TEXT,
+            font=ctk.CTkFont("Segoe UI Semibold", font_title)
+        ).pack(pady=(pad_top_title, pad_between))
 
     ctk.CTkLabel(
         card,

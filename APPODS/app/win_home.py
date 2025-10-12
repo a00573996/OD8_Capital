@@ -1,3 +1,4 @@
+
 # app/win_home.py — ZAVE (Perfil con validación inline robusta, sin ingreso/frecuencia en Perfil)
 import customtkinter as ctk
 import tkinter as tk
@@ -694,3 +695,4 @@ def open_win_home(parent: ctk.CTk):
     # ---------- Inicializar ----------
     state = load_profile()
     _load_to_widgets()
+

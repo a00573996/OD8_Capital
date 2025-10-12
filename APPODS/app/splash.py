@@ -1,125 +1,138 @@
-# app/splash.py — Splash ZAVE (diseño original + animaciones)
+# app/splash.py — Splash con barra de progreso determinada (seguro)
 import customtkinter as ctk
 from PIL import Image
-from pathlib import Path
+import os
 
 PRIMARY_BLUE = "#2563EB"
-BG          = "#F3F4F6"
-CARD_BG     = "#FFFFFF"
-TEXT        = "#111827"
-TEXT_MUTED  = "#6B7280"
+TEXT         = "#111827"
+TEXT_MUTED   = "#6B7280"
+CARD_BG      = "#FFFFFF"
+BG           = "#F3F4F6"
 
-def _center(win, w, h):
-    win.update_idletasks()
-    sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
-    x = int((sw - w) / 2)
-    y = int((sh - h) / 2.6)
-    win.geometry(f"{w}x{h}+{x}+{y}")
-
-def run_splash_then(callback,
-                    total_ms=1800,
-                    fade_in_ms=400,
-                    fade_out_ms=400):
-    """
-    Mantiene el DISEÑO PREVIO:
-      - Ventana 520x360, tarjeta con esquinas 16
-      - Logo 96x96, título 'ZAVE', subtítulo 'Finanzas personales sencillas'
-      - Barra de progreso centrada
-    Solo se añaden animaciones: fade-in, progreso, fade-out.
-    """
-    ctk.set_appearance_mode("light")
-
-    app = ctk.CTk()
-    app.overrideredirect(True)     # sin barra
-    app.configure(fg_color=BG)
-    try:
-        app.attributes("-topmost", True)
-    except Exception:
-        pass
-
-    # --- Tamaños (idénticos al splash original) ---
-    W, H = 520, 360
-    _center(app, W, H)
-
-    # --- Tarjeta (igual) ---
-    card = ctk.CTkFrame(app, fg_color=CARD_BG, corner_radius=16)
-    card.pack(fill="both", expand=True, padx=18, pady=18)
-
-    # --- Logo (igual) ---
-    icon_path = Path(__file__).resolve().parents[1] / "assets" / "ZAVE LOGO.png"
-    if icon_path.exists():
-        logo_img = ctk.CTkImage(light_image=Image.open(icon_path), size=(96, 96))
-        ctk.CTkLabel(card, image=logo_img, text="").pack(pady=(28, 8))
-    else:
-        logo_img = None  # no rompe
-
-    # --- Título y subtítulo (igual) ---
-    ctk.CTkLabel(
-        card, text="ZAVE",
-        text_color=TEXT, font=ctk.CTkFont("Segoe UI Semibold", 28)
-    ).pack()
-    ctk.CTkLabel(
-        card, text="Finanzas personales sencillas",
-        text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", 13)
-    ).pack(pady=(2, 16))
-
-    # --- Progreso (igual) ---
-    pb = ctk.CTkProgressBar(card, height=10, corner_radius=8, progress_color=PRIMARY_BLUE)
-    pb.pack(fill="x", padx=40, pady=(4, 18))
-    pb.set(0.0)
-
-    # ---- Animaciones (solo añadidas, sin cambiar el layout) ----
-    hold_ms = max(0, total_ms - fade_in_ms - fade_out_ms)
-    steps_in   = max(10, fade_in_ms // 25)
-    steps_hold = max(15, hold_ms // 35)
-    steps_out  = max(10, fade_out_ms // 25)
-
-    # Fade-in 0 -> 1 (acompañado de progreso hasta 35%)
-    def _fade_in(i=0):
-        alpha = min(1.0, i / steps_in)
+class Splash:
+    def __init__(self, root: ctk.CTk):
+        self.root = root
+        self.top = ctk.CTkToplevel(root)
+        self.top.overrideredirect(True)
         try:
-            app.attributes("-alpha", alpha)
+            self.top.attributes("-topmost", True)
         except Exception:
             pass
-        pb.set(min(0.35, alpha * 0.35))
-        if i < steps_in:
-            app.after(max(10, fade_in_ms // max(1, steps_in)), _fade_in, i + 1)
-        else:
-            _hold_progress(0)
 
-    # Avance “hold” 35% -> 95%
-    def _hold_progress(i=0):
-        if steps_hold <= 0:
-            _fade_out(0)
+        w, h = 560, 360
+        sw, sh = self.top.winfo_screenwidth(), self.top.winfo_screenheight()
+        x, y = (sw - w)//2, int((sh - h)*0.33)
+        self.top.geometry(f"{w}x{h}+{x}+{y}")
+
+        outer = ctk.CTkFrame(self.top, fg_color=BG)
+        outer.pack(fill="both", expand=True, padx=16, pady=16)
+
+        card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=14)
+        card.pack(fill="both", expand=True, padx=10, pady=10)
+
+        content = ctk.CTkFrame(card, fg_color=CARD_BG)
+        content.pack(expand=True)
+
+        # Logo
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "ZAVE LOGO.png")
+        if os.path.exists(logo_path):
+            img = Image.open(logo_path)
+            cimg = ctk.CTkImage(img, size=(120, 120))
+            ctk.CTkLabel(content, image=cimg, text="").pack(pady=(24, 8))
+            self._logo_img = cimg  # evitar GC
+        else:
+            ctk.CTkLabel(content, text="💰", font=ctk.CTkFont("Segoe UI", 72)).pack(pady=(24, 8))
+
+        ctk.CTkLabel(content, text="ZAVE", text_color=TEXT,
+                     font=ctk.CTkFont("Segoe UI Semibold", 28)).pack()
+        ctk.CTkLabel(content, text="Organiza tus finanzas — ODS 8",
+                     text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", 14)).pack(pady=(4, 16))
+
+        # Barra de progreso determinada (llenado suave)
+        self.progress = ctk.CTkProgressBar(content, height=10, corner_radius=6, progress_color=PRIMARY_BLUE)
+        self.progress.set(0.0)
+        self.progress.pack(fill="x", padx=40, pady=(0, 8))
+        self.lbl_status = ctk.CTkLabel(content, text="Cargando…", text_color=TEXT_MUTED,
+                                       font=ctk.CTkFont("Segoe UI", 12))
+        self.lbl_status.pack(pady=(0, 18))
+
+        # Estado interno de la animación
+        self._interval_ms = 20         # ~50 FPS
+        self._duration_ms = 1200       # valor por defecto
+        self._elapsed_ms  = 0
+        self._tick_id     = None
+        self._on_done     = None
+        self._completed   = False
+
+        self.top.protocol("WM_DELETE_WINDOW", self._on_user_close)
+
+    # API pública
+    def run(self, duration_ms: int = 1400, on_done=None):
+        self._on_done     = on_done
+        self._duration_ms = max(400, int(duration_ms))  # poner mínimo visual
+        self._elapsed_ms  = 0
+        self.progress.set(0.0)
+        self._schedule_tick()
+
+    # Lógica de progreso
+    def _schedule_tick(self):
+        # seguridad: si la ventana ya no existe, no programes más
+        if not (self.top and self.top.winfo_exists()):
             return
-        t = i / steps_hold
-        pb.set(0.35 + (0.60 * t))
-        if i < steps_hold:
-            app.after(max(15, hold_ms // max(1, steps_hold)), _hold_progress, i + 1)
-        else:
-            _fade_out(0)
+        self._tick_id = self.top.after(self._interval_ms, self._tick)
 
-    # Fade-out 1 -> 0 (remate de barra a 100%) y abrir main
-    def _fade_out(i=0):
-        alpha = max(0.0, 1.0 - (i / steps_out))
+    def _tick(self):
+        self._tick_id = None
+        if not (self.top and self.top.winfo_exists()):
+            return
+
+        self._elapsed_ms += self._interval_ms
+        p = min(1.0, self._elapsed_ms / self._duration_ms)
         try:
-            app.attributes("-alpha", alpha)
+            self.progress.set(p)
         except Exception:
             pass
-        pb.set(min(1.0, 0.95 + (0.05 * (i / max(1, steps_out)))))
-        if i < steps_out:
-            app.after(max(10, fade_out_ms // max(1, steps_out)), _fade_out, i + 1)
+
+        if p >= 1.0:
+            self._finish()
         else:
+            self._schedule_tick()
+
+    # Cierre/avance seguro
+    def _finish(self):
+        if self._completed:
+            return
+        self._completed = True
+        self._cancel_tick()
+        # destruir splash primero
+        self._destroy_only()
+        # luego lanzar callback
+        if callable(self._on_done):
+            self.root.after(0, self._on_done)
+
+    def _on_user_close(self):
+        # Si el usuario cierra el splash, procedemos igual al main
+        if not self._completed:
+            self._completed = True
+            self._cancel_tick()
+            self._destroy_only()
+            if callable(self._on_done):
+                self.root.after(0, self._on_done)
+
+    def _cancel_tick(self):
+        if self._tick_id is not None:
             try:
-                app.destroy()
-            finally:
-                callback()
+                self.top.after_cancel(self._tick_id)
+            except Exception:
+                pass
+            self._tick_id = None
 
-    # Iniciar splash en alpha 0 (para ver el fade-in)
-    try:
-        app.attributes("-alpha", 0.0)
-    except Exception:
-        pass
-
-    _fade_in(0)
-    app.mainloop()
+    def _destroy_only(self):
+        try:
+            self.progress.set(1.0)
+        except Exception:
+            pass
+        try:
+            self.top.destroy()
+        except Exception:
+            pass

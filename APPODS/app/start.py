@@ -1,7 +1,23 @@
-# app/start.py — Lanza splash y luego la app principal
-from app.splash import run_splash_then
-from app.main import main as launch_main
+# app/start.py — Arranque con splash y luego menú principal
+import customtkinter as ctk
+from app.splash import Splash
+from app.main import open_main_menu
+
+def run_splash_then():
+    ctk.set_appearance_mode("light")
+    ctk.set_default_color_theme("green")
+
+    root = ctk.CTk()
+    root.withdraw()  # root oculto durante el splash
+
+    splash = Splash(root)
+
+    def _launch_main():
+        # Abre el menú principal como Toplevel sobre el mismo root
+        open_main_menu(root)
+
+    splash.run(duration_ms=1400, on_done=_launch_main)
+    root.mainloop()
 
 if __name__ == "__main__":
-    # Duración total del splash (ms). Ej: 1800, 2200, 3000
-    run_splash_then(launch_main, total_ms=1000)
+    run_splash_then()

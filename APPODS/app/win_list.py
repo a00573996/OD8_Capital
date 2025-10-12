@@ -1,4 +1,4 @@
-# win_list.py — ZAVE (Registro de Gastos con IA/CSV + edición de categoría/descripcion/monto)
+# win_list.py — ZAVE (Registro de Gastos con IA/CSV + edición + botón Inicio + eliminación persistente)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -113,7 +113,8 @@ def open_win_list(parent: ctk.CTk):
 
     # ---------- Acciones ----------
     actions = ctk.CTkFrame(card, fg_color=CARD_BG)
-    actions.grid(row=4, column=0, columnspan=4, sticky="e", pady=6, padx=pad_card)
+    actions.grid(row=4, column=0, columnspan=4, sticky="ew", pady=6, padx=pad_card)
+    actions.grid_columnconfigure(0, weight=1)  # para empujar botones a la derecha
 
     # Estado interno: mapeo 1:1 lista ↔ CSV
     # lb_items[i] = {"csv_index", "desc", "cat", "monto", "fecha"}
@@ -174,21 +175,40 @@ def open_win_list(parent: ctk.CTk):
     def eliminar():
         sel = lb.curselection()
         if not sel:
+            messagebox.showinfo("Eliminar", "Selecciona un gasto de la lista.")
             return
-        idx = sel[0]
-        # Solo borra de la vista y del mapping local (no del CSV, por simplicidad)
-        lb.delete(idx)
-        lb_items.pop(idx)
+        i = sel[0]
+        meta = lb_items[i]
+        csv_idx = meta.get("csv_index", -1)
+
+        if not messagebox.askyesno("Confirmar", "¿Eliminar el gasto seleccionado de forma permanente?"):
+            return
+
+        # Eliminar en CSV y recargar
+        rows = load_gastos()
+        if 0 <= csv_idx < len(rows):
+            try:
+                del rows[csv_idx]
+                save_all_gastos(rows)    # guarda con encabezado
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar del archivo:\n{e}")
+                return
+        else:
+            # índice inesperado; recargar por seguridad
+            messagebox.showwarning("Aviso", "No se encontró el registro en el archivo. Se recargará la lista.")
+        _reload_rows_meta_from_csv()
 
     def limpiar():
         if lb.size() == 0:
             return
         if messagebox.askyesno("Confirmar", "¿Limpiar todos los gastos? (lista + CSV)"):
-            lb.delete(0, "end")
-            lb_items.clear()
-            clear_gastos()  # deja encabezado
+            try:
+                clear_gastos()  # deja encabezado vacío
+                _reload_rows_meta_from_csv()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo limpiar el archivo:\n{e}")
 
-    # ---- NUEVO: Editar categoría/descripcion/monto ----
+    # ---- Editar categoría/descripcion/monto ----
     def editar():
         sel = lb.curselection()
         if not sel:
@@ -278,13 +298,13 @@ def open_win_list(parent: ctk.CTk):
                       text_color=TEXT, border_color=SEPARATOR, border_width=2,
                       corner_radius=8, command=dlg.destroy).pack(side="right", padx=6)
 
-    # Botones principales
+    # Botones principales (a la derecha del row de acciones)
     ctk.CTkButton(
         actions, text="Agregar gasto",
         fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn, "bold"),
         command=agregar
-    ).pack(side="right", padx=6)
+    ).grid(row=0, column=3, sticky="e", padx=6)
 
     ctk.CTkButton(
         actions, text="Eliminar seleccionado",
@@ -292,7 +312,7 @@ def open_win_list(parent: ctk.CTk):
         border_color=PRIMARY_BLUE, border_width=2, text_color=PRIMARY_BLUE,
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
         command=eliminar
-    ).pack(side="left", padx=6)
+    ).grid(row=0, column=1, sticky="w", padx=6)
 
     ctk.CTkButton(
         actions, text="Limpiar",
@@ -300,16 +320,15 @@ def open_win_list(parent: ctk.CTk):
         text_color=TEXT, border_color=SEPARATOR, border_width=2,
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
         command=limpiar
-    ).pack(side="left", padx=6)
+    ).grid(row=0, column=0, sticky="w", padx=6)
 
-    # NUEVO: botón Editar
     ctk.CTkButton(
         actions, text="Editar seleccionado",
         fg_color="white", hover_color="#F8FAFF",
         text_color=TEXT, border_color=SEPARATOR, border_width=2,
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
         command=editar
-    ).pack(side="left", padx=6)
+    ).grid(row=0, column=2, sticky="w", padx=6)
 
     # ---------- Lista ----------
     list_container = ctk.CTkFrame(card, fg_color=BG, corner_radius=radius)
@@ -336,10 +355,39 @@ def open_win_list(parent: ctk.CTk):
     # ---------- Pie ----------
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .grid(row=98, column=0, columnspan=4, sticky="ew", padx=pad_sep_x, pady=(int(14 * scale), int(12 * scale)))
+
+    # Lógica Inicio (cierra ventana + root oculto y relanza Main)
+    def _go_home():
+        try:
+            win.destroy()
+        except Exception:
+            pass
+        try:
+            parent.destroy()
+        except Exception:
+            pass
+        from app.main import main as launch_main
+        launch_main()
+
+    footer = ctk.CTkFrame(card, fg_color=CARD_BG)
+    footer.grid(row=99, column=0, columnspan=4, sticky="ew", padx=pad_card, pady=(0, pad_card))
+    footer.grid_columnconfigure(0, weight=1)
+    footer.grid_columnconfigure(1, weight=0)
+
+    # ⟵ Inicio (izquierda)
     ctk.CTkButton(
-        card, text="Cerrar",
+        footer, text="⟵ Inicio",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
+        height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
+        command=_go_home
+    ).grid(row=0, column=0, sticky="w")
+
+    # Cerrar (derecha)
+    ctk.CTkButton(
+        footer, text="Cerrar",
         fg_color="white", hover_color="#F8FAFF",
         text_color=TEXT, border_color=SEPARATOR, border_width=2,
         height=btn_h, corner_radius=radius, font=ctk.CTkFont("Segoe UI", font_btn),
         command=win.destroy
-    ).grid(row=99, column=0, columnspan=4, sticky="e", padx=pad_card, pady=(0, pad_card))
+    ).grid(row=0, column=1, sticky="e", padx=(6, 0))

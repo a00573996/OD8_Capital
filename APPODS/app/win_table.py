@@ -1,4 +1,4 @@
-# win_table.py — ZAVE (Reporte con tabla, totales y gráfica con scroll + barras/pastel + % y montos)
+# win_table.py — ZAVE (Reporte con tabla, totales y gráfica con scroll + barras/pastel + % y montos + botón Inicio)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
@@ -26,9 +26,7 @@ def _parse_float_safe(raw) -> float:
     s = str(raw).strip()
     if not s:
         return 0.0
-    # limpiar símbolos comunes
     s = s.replace("$", "").replace("€", "").replace("MXN", "").replace("USD", "").replace(" ", "")
-    # normalizar coma decimal
     if "," in s and "." not in s:
         s = s.replace(".", "")
         s = s.replace(",", ".")
@@ -80,7 +78,7 @@ def open_win_table(parent: ctk.CTk):
     frame_container = ctk.CTkFrame(canvas_main, fg_color=BG)
     canvas_main.create_window((0, 0), window=frame_container, anchor="nw")
 
-    def _on_configure(event):
+    def _on_configure(_):
         canvas_main.configure(scrollregion=canvas_main.bbox("all"))
     frame_container.bind("<Configure>", _on_configure)
 
@@ -144,14 +142,13 @@ def open_win_table(parent: ctk.CTk):
     chart_frame = ctk.CTkFrame(card, fg_color=CARD_BG)
     chart_canvas_widget = None
 
-    # Botón de alternar tipo (NO se muestra hasta que la gráfica esté visible)
     btn_switch = ctk.CTkButton(
         btns, text="Cambiar a pastel",
         fg_color="white", hover_color="#F8FAFF",
         text_color=TEXT, border_color=SEPARATOR, border_width=2,
         corner_radius=8, command=lambda: switch_chart_type()
     )
-    # Nota: no lo .pack todavía; se empaqueta cuando la gráfica se muestra
+    # (Se muestra solo cuando la gráfica está visible)
 
     def _destroy_chart():
         nonlocal chart_canvas_widget
@@ -165,11 +162,6 @@ def open_win_table(parent: ctk.CTk):
         return f"${val:,.2f}"
 
     def _build_chart(por_principal: dict[str, float]):
-        """
-        Dibuja una barra o pastel con totales por categoría principal,
-        mostrando porcentaje y monto. En barras, el texto va DENTRO de la barra,
-        pegado al borde superior con contraste blanco.
-        """
         nonlocal chart_canvas_widget
         _destroy_chart()
 
@@ -178,14 +170,12 @@ def open_win_table(parent: ctk.CTk):
                          text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl)).pack(padx=pad, pady=pad)
             return
 
-        # Ordenado desc por monto
         items = sorted(por_principal.items(), key=lambda kv: kv[1], reverse=True)
         cats = [c for c, _ in items]
         vals = [v for _, v in items]
         total = sum(vals) if vals else 1.0
 
         if chart_type.get() == "bar":
-            # Altura dinámica
             height = max(3.8, min(7.0, len(cats) * 0.48))
             fig, ax = plt.subplots(figsize=(8.5, height))
             bars = ax.bar(cats, vals, color=["#60A5FA" if i % 2 else "#3B82F6" for i in range(len(cats))])
@@ -194,14 +184,11 @@ def open_win_table(parent: ctk.CTk):
             ax.set_xlabel("Categorías")
             ax.tick_params(axis="x", labelrotation=18)
 
-            # Texto DENTRO de cada barra, borde superior
             max_v = max(vals) if vals else 1.0
             for rect, v in zip(bars, vals):
                 pct = (v / total) * 100.0 if total else 0.0
                 label = f"{pct:.1f}% — {_format_money(v)}"
-                # y interno un poco por debajo de la cima
                 y_text = rect.get_height() - (0.02 * max_v)
-                # Evitar y negativo si barra muy pequeña
                 if y_text < rect.get_height() * 0.6:
                     y_text = rect.get_height() * 0.6
                 ax.text(
@@ -216,7 +203,7 @@ def open_win_table(parent: ctk.CTk):
 
             fig.tight_layout()
 
-        else:  # pie
+        else:
             def _autopct(pct):
                 v = pct / 100.0 * total
                 return f"{pct:.1f}%\n{_format_money(v)}"
@@ -241,7 +228,6 @@ def open_win_table(parent: ctk.CTk):
         chart_canvas_widget.get_tk_widget().pack(fill="both", expand=True, padx=pad, pady=(0, pad))
 
     def toggle_chart():
-        # Muestra/oculta la gráfica y también muestra/oculta el botón de alternar tipo
         if not chart_visible.get():
             chart_visible.set(True)
             chart_frame.grid(row=3, column=0, columnspan=2, sticky="ew", padx=pad, pady=(0, pad))
@@ -253,7 +239,6 @@ def open_win_table(parent: ctk.CTk):
                 por_principal[principal] = por_principal.get(principal, 0.0) + monto
             _build_chart(por_principal)
             btn_chart.configure(text="Ocultar gráfica")
-            # ahora sí mostramos el botón de alternar tipo
             btn_switch.configure(text="Cambiar a pastel" if chart_type.get() == "bar" else "Cambiar a barras")
             btn_switch.pack(side="left", padx=6)
         else:
@@ -261,7 +246,6 @@ def open_win_table(parent: ctk.CTk):
             _destroy_chart()
             chart_frame.grid_forget()
             btn_chart.configure(text="Mostrar gráfica")
-            # ocultar el botón de alternar tipo al ocultar gráfica
             btn_switch.pack_forget()
 
         win.update_idletasks()
@@ -314,7 +298,6 @@ def open_win_table(parent: ctk.CTk):
             key_sub = f"{principal} > {sub}" if sub else principal
             por_subcat[key_sub] = por_subcat.get(key_sub, 0.0) + monto
 
-        # Totales (texto) con % por categoría principal
         bloques = [f"Total general: ${total_general:,.2f}"]
         if por_principal and total_general > 0:
             orden_principal = sorted(por_principal.items(), key=lambda kv: kv[1], reverse=True)
@@ -325,7 +308,6 @@ def open_win_table(parent: ctk.CTk):
             bloques.append(f"[Por categoría] {texto_principal}")
         lbl_totales.configure(text="   ".join(bloques))
 
-        # Si la gráfica está visible, redibujar
         if chart_visible.get():
             _build_chart(por_principal)
 
@@ -339,7 +321,7 @@ def open_win_table(parent: ctk.CTk):
         if chart_visible.get():
             _destroy_chart()
 
-    # Botones
+    # Botones de acción (totales)
     ctk.CTkButton(btns, text="Actualizar",
                   fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
                   corner_radius=8, command=cargar_tabla).pack(side="left", padx=6)
@@ -354,6 +336,42 @@ def open_win_table(parent: ctk.CTk):
                               text_color=TEXT, border_color=SEPARATOR, border_width=2,
                               corner_radius=8, command=toggle_chart)
     btn_chart.pack(side="left", padx=6)
+
+    # ---------- Separador inferior + Pie con Inicio/Cerrar ----------
+    ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
+        .grid(row=98, column=0, columnspan=2, sticky="ew", padx=pad, pady=(int(14 * scale), int(12 * scale)))
+
+    def _go_home():
+        # Cierra esta ventana y el root oculto, y relanza Main
+        try:
+            win.destroy()
+        except Exception:
+            pass
+        try:
+            parent.destroy()
+        except Exception:
+            pass
+        from app.main import main as launch_main
+        launch_main()
+
+    footer2 = ctk.CTkFrame(card, fg_color=CARD_BG)
+    footer2.grid(row=99, column=0, columnspan=2, sticky="ew", padx=pad, pady=(0, pad))
+    footer2.grid_columnconfigure(0, weight=1)
+    footer2.grid_columnconfigure(1, weight=0)
+
+    ctk.CTkButton(
+        footer2, text="⟵ Inicio",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
+        corner_radius=8, command=_go_home
+    ).grid(row=0, column=0, sticky="w")
+
+    ctk.CTkButton(
+        footer2, text="Cerrar",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=TEXT, border_color=SEPARATOR, border_width=2,
+        corner_radius=8, command=win.destroy
+    ).grid(row=0, column=1, sticky="e", padx=(6, 0))
 
     # Primera carga
     cargar_tabla()

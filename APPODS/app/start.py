@@ -16,7 +16,7 @@ def run_splash_then():
         # Abre el menú principal como Toplevel sobre el mismo root
         open_main_menu(root)
 
-    splash.run(duration_ms=1400, on_done=_launch_main)
+    splash.run(duration_ms=1000, on_done=_launch_main)
     root.mainloop()
 
 if __name__ == "__main__":

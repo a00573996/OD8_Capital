@@ -5,15 +5,14 @@ from tkinter import messagebox
 
 def go_home(win: tk.Toplevel, parent: ctk.CTk | tk.Tk, after_ids: list[str] | None = None):
     """
-    Cancela timers/after pendientes, destruye la ventana actual y el root oculto,
-    y relanza app.main.main().
+    Cancela timers .after() pendientes, destruye la ventana actual y el root oculto,
+    y relanza app.main.main() desde cero para que el logo/imágenes se carguen bien.
 
     - win: CTkToplevel/Toplevel de la ventana actual.
-    - parent: root oculto creado por go_to(...) en main.py.
-    - after_ids: lista con ids devueltos por .after(...) que deban cancelarse.
+    - parent: root (oculto) que recibió esta Toplevel.
+    - after_ids: lista con ids devueltos por .after(...) a cancelar.
     """
-
-    # 1) Cancelar after()/timers pendientes (evita 'pyimageX doesn't exist')
+    # 1) Cancelar timers
     if after_ids:
         for aid in list(after_ids):
             try:
@@ -22,7 +21,7 @@ def go_home(win: tk.Toplevel, parent: ctk.CTk | tk.Tk, after_ids: list[str] | No
                 pass
         after_ids.clear()
 
-    # 2) Destruir UI actual
+    # 2) Cerrar UI actual
     try:
         win.destroy()
     except Exception:

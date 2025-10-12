@@ -6,7 +6,7 @@ import re
 
 from core.profile import load_profile, save_profile, is_valid_email, to_float, to_int
 from core.classifier import classify_user
-
+from app.utils.nav import go_home   # <-- NUEVO
 
 # Paleta (azul)
 PRIMARY_BLUE       = "#2563EB"
@@ -226,19 +226,17 @@ def open_win_home(parent: ctk.CTk):
 
     # === Botón Inicio (arriba derecha) ===
     def _save_for_nav() -> bool:
-        """Valida, vuelca widgets a 'state' y guarda. Sin mensajes 'OK' para no duplicar diálogos."""
         if not _validate_all_inline():
             messagebox.showerror("Revisa tus campos", "Hay datos por corregir (marcados en rojo).")
             return False
-        # Volcar widgets a state (idéntico a _save)
+
+        # Volcar widgets a state
         state["usuario"]["nombre"] = ent_nombre.get().strip()
         state["usuario"]["edad"] = to_int(ent_edad.get(), 0)
         state["usuario"]["genero"] = cmb_genero.get()
         state["usuario"]["ubicacion"]["pais"] = cmb_pais.get()
         state["usuario"]["ubicacion"]["ciudad"] = ent_ciudad.get().strip()
         state["usuario"]["email"] = ent_email.get().strip()
-
-        # Ingresos se mantienen (se editan en ventana Ingresos)
 
         state["situacion"]["ocupacion"] = cmb_ocup.get()
         state["situacion"]["dependientes"] = to_int(ent_dep.get(), 0) or 0
@@ -268,16 +266,13 @@ def open_win_home(parent: ctk.CTk):
         state["preferencias"]["recordatorios"]["frecuencia"] = cmb_rec_freq.get()
         state["preferencias"]["alertas_sobrepresupuesto"]["activo"] = bool(alert_var.get())
         state["preferencias"]["alertas_sobrepresupuesto"]["umbral_porcentaje"] = to_int(ent_umbral.get(), 15) or 15
-
         state["preferencias"]["consentimiento_datos_locales"] = True
+
         try:
-            state["classification"] = classify_user(state)  # ← añade/actualiza la clasificación
+            state["classification"] = classify_user(state)
         except Exception as e:
-            # No bloquear el guardado si hay un detalle de clasificación
             print("[WARN] classify_user falló:", e)
 
-        save_profile(state)
-        
         try:
             save_profile(state)
             _update_summary()  # recalcular tarjetas
@@ -287,21 +282,10 @@ def open_win_home(parent: ctk.CTk):
             return False
 
     def _go_home():
-        """Guarda, cierra esta ventana y abre el menú principal como Toplevel del root oculto."""
         if not _save_for_nav():
             return
-        try:
-            from app.main import open_main_menu  # evita import circular al cargar el módulo
-            root = win.master if isinstance(win.master, (ctk.CTk, tk.Tk)) else None
-            if root is None:
-                messagebox.showerror("Error", "No se encontró la ventana principal para volver a Inicio.")
-                return
-            # abrir menú
-            open_main_menu(root)
-            # cerrar esta
-            win.destroy()
-        except Exception as e:
-            messagebox.showerror("Error", f"No fue posible abrir Inicio:\n{e}")
+        # Usa la utilidad unificada (evita ImportErrors y pyimage...)
+        go_home(win, parent)
 
     btn_inicio = ctk.CTkButton(
         main, text="⟵ Inicio",
@@ -570,7 +554,6 @@ def open_win_home(parent: ctk.CTk):
         ent_ciudad.insert(0, u.get("ubicacion", {}).get("ciudad", ""))
         ent_email.insert(0, u.get("email", ""))
 
-        # Ingresos: solo lectura para resumen (se editan en Ingresos)
         ing = state.get("ingresos", {})
         ingreso_fijo_ro = float(ing.get("fijo_mensual", 0.0) or 0.0)
         freq_ro         = ing.get("frecuencia", "Mensual")
@@ -680,7 +663,6 @@ def open_win_home(parent: ctk.CTk):
         if not _validate_all_inline():
             messagebox.showerror("Revisa tus campos", "Algunos datos necesitan corrección (marcados en rojo).")
             return
-        # misma lógica de _save_for_nav(), pero con mensaje de éxito
         if _save_for_nav():
             messagebox.showinfo("OK", "Perfil guardado correctamente.")
 

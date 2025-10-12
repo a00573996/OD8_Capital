@@ -1,9 +1,6 @@
-# main.py — ZAVE (cerrar Main y lanzar solo la ventana seleccionada)
+# app/main.py — ZAVE (navegación con un solo root oculto)
 import customtkinter as ctk
 import tkinter as tk
-
-import os
-from PIL import Image  # <-- NUEVO
 
 from app.win_home import open_win_home      # Perfil de usuario
 from app.win_form import open_win_form      # Ingresos
@@ -44,52 +41,23 @@ def _nav_button(parent, text, command, *, radius, font_btn, btn_h, btn_w):
         width=btn_w
     )
 
-def go_to(open_window_fn, current_root: ctk.CTk):
+def open_main_menu(root: ctk.CTk):
     """
-    Cierra el Main y abre SOLO la ventana destino.
-    - Crea un nuevo root oculto
-    - Llama a open_window_fn(new_root) que creará un Toplevel
-    - Vincula el cierre del Toplevel para terminar la app
+    Abre el Menú Principal como CTkToplevel sobre un root oculto.
+    Al pulsar una opción:
+      - cierra SOLO este menú
+      - abre la ventana destino como otro Toplevel (root sigue vivo)
     """
-    # 1) Cerrar Main
+    menu = ctk.CTkToplevel(root)
+    menu.title(APP_TITLE)
     try:
-        current_root.destroy()
+        menu.state("zoomed")
     except Exception:
-        pass
-
-    # 2) Nuevo root oculto
-    new_root = ctk.CTk()
-    new_root.withdraw()  # no queremos que se vea el root en blanco
-    try:
-        new_root.state("zoomed")
-    except Exception:
-        new_root.geometry("1280x800")
-
-    # 3) Crear la ventana destino (Toplevel)
-    open_window_fn(new_root)
-
-    # 4) Enlazar cierre del Toplevel para terminar la app
-    #    (buscamos el/los toplevel creados por la función)
-    for w in new_root.winfo_children():
-        # customtkinter genera CTkToplevel que hereda de Toplevel
-        if isinstance(w, (ctk.CTkToplevel, tk.Toplevel)):
-            w.protocol("WM_DELETE_WINDOW", new_root.destroy)
-
-    # 5) Mostrar solo la ventana destino (el root queda oculto)
-    new_root.mainloop()
-
-def main():
-    _init_theme()
-
-    root = ctk.CTk()
-    root.title(APP_TITLE)
-    try:
-        root.state("zoomed")
-    except Exception:
-        root.geometry("1280x800")
+        menu.geometry("1280x800")
+    menu.minsize(1280, 720)
 
     # Escalado
-    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    sw, sh = menu.winfo_screenwidth(), menu.winfo_screenheight()
     scale  = min(sw/1920, sh/1080)
 
     radius        = max(8, int(10 * scale))
@@ -109,30 +77,30 @@ def main():
     pad_footer    = max(6,  int(8 * scale))
 
     # Lienzo
-    outer = ctk.CTkFrame(root, fg_color=BG)
+    outer = ctk.CTkFrame(menu, fg_color=BG)
     outer.pack(fill="both", expand=True, padx=pad_outer, pady=pad_outer)
 
     card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
     card.pack(expand=True, padx=pad_card_x, pady=pad_card_y)
 
-    # --- Logo ZAVE ---
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    logo_path = os.path.normpath(os.path.join(BASE_DIR, "..", "assets", "ZAVE LOGO.png"))
-
+    # Encabezado (intenta cargar logo si existe, si no, texto)
+    header = ctk.CTkFrame(card, fg_color=CARD_BG)
+    header.pack(pady=(pad_top_title, pad_between))
     try:
-        # tamaño adaptable al escalar de pantalla
-        logo_size = max(96, int(120 * scale))
-        logo_img = ctk.CTkImage(light_image=Image.open(logo_path),
-                                dark_image=Image.open(logo_path),
-                                size=(logo_size, logo_size))
-        ctk.CTkLabel(card, image=logo_img, text="").pack(pady=(pad_top_title, pad_between))
-    except Exception as e:
-        # si el logo no se encuentra, mostramos solo el texto (fallback)
-        ctk.CTkLabel(
-            card, text="💰\u2003ZAVE",
-            text_color=TEXT,
-            font=ctk.CTkFont("Segoe UI Semibold", font_title)
-        ).pack(pady=(pad_top_title, pad_between))
+        from PIL import Image
+        import os
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "ZAVE LOGO.png")
+        if os.path.exists(logo_path):
+            img = Image.open(logo_path)
+            cimg = ctk.CTkImage(img, size=(96,96))
+            ctk.CTkLabel(header, image=cimg, text="").pack()
+            ctk.CTkLabel(header, text="ZAVE", text_color=TEXT,
+                         font=ctk.CTkFont("Segoe UI Semibold", font_title)).pack()
+        else:
+            raise FileNotFoundError
+    except Exception:
+        ctk.CTkLabel(header, text="💰\u2003ZAVE",
+                     text_color=TEXT, font=ctk.CTkFont("Segoe UI Semibold", font_title)).pack()
 
     ctk.CTkLabel(
         card,
@@ -148,21 +116,31 @@ def main():
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .pack(fill="x", padx=pad_sep_x, pady=(pad_between * 2, pad_after_sep))
 
-    # Botones -> usan go_to(...) para cerrar Main y abrir la ventana
+    # Helper para abrir y cerrar el menú
+    def _open_then_close_self(open_fn):
+        def _inner():
+            open_fn(root)   # abre nueva ventana (otro Toplevel)
+            try:
+                menu.destroy()  # cierra el menú actual
+            except Exception:
+                pass
+        return _inner
+
+    # Botones de menú (abren ventana y cierran este menú)
     _nav_button(card, "👤\u2003Perfil de Usuario",
-                lambda: go_to(open_win_home, root),
+                _open_then_close_self(open_win_home),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
     _nav_button(card, "💵\u2003Ingresos",
-                lambda: go_to(open_win_form, root),
+                _open_then_close_self(open_win_form),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
     _nav_button(card, "🧾\u2003Registro de Gastos",
-                lambda: go_to(open_win_list, root),
+                _open_then_close_self(open_win_list),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
     _nav_button(card, "📊\u2003Reporte de Gastos",
-                lambda: go_to(open_win_table, root),
+                _open_then_close_self(open_win_table),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
@@ -188,6 +166,15 @@ def main():
         font=ctk.CTkFont("Segoe UI", font_footer)
     ).pack(pady=(pad_footer, 0))
 
+    # Cerrar el menú = cerrar toda la app
+    menu.protocol("WM_DELETE_WINDOW", root.destroy)
+
+
+def main():
+    _init_theme()
+    root = ctk.CTk()
+    root.withdraw()  # mantén el root oculto
+    open_main_menu(root)
     root.mainloop()
 
 if __name__ == "__main__":

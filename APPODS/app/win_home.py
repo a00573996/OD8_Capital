@@ -1,5 +1,4 @@
-
-# app/win_home.py — ZAVE (Perfil con validación inline robusta, sin ingreso/frecuencia en Perfil)
+# app/win_home.py — ZAVE (Perfil con validación inline + botón "Inicio")
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -18,27 +17,19 @@ SEPARATOR          = "#E5E7EB"
 ERROR_RED          = "#DC2626"
 BORDER_DEFAULT     = "#D1D5DB"
 
-# --------- Parser de dinero estricto (no convierte letras a 0 en silencio) ---------
+# --------- Parser de dinero estricto ---------
 _MONEY_CLEAN_RE = re.compile(r"[,\s]")
 def parse_money_strict(txt: str) -> float | None:
-    """
-    Acepta formatos tipo: 1234, 1,234.56, $1,234.56
-    Rechaza textos con letras u otros símbolos (salvo $ , . y espacios).
-    Devuelve float o None si inválido.
-    """
     if txt is None:
         return None
     s = str(txt).strip()
     if s == "":
         return None
-    # permitir $ , . y espacios como formato; rechazar letras
     if re.search(r"[A-Za-z]", s):
         return None
     s = s.replace("$", "")
-    s = _MONEY_CLEAN_RE.sub("", s)  # quita comas y espacios
-    # ahora s debe ser un número válido (con opcional .decimal)
+    s = _MONEY_CLEAN_RE.sub("", s)
     if not re.fullmatch(r"-?\d+(\.\d+)?", s):
-        # caso europeo: "1234,56" (sin punto)
         if re.fullmatch(r"-?\d+(,\d+)?", s):
             s = s.replace(",", ".")
         else:
@@ -50,30 +41,21 @@ def parse_money_strict(txt: str) -> float | None:
 
 
 class ErrorInline:
-    """
-    Mensajes inline y borde rojo por campo.
-    Coloca el mensaje en la columna 2 (a la derecha del label) en la misma fila.
-    """
     def __init__(self):
         self._labels = {}  # entry -> (parent_frame, label_widget)
 
     def show(self, entry: ctk.CTkEntry, message: str):
-        # borde rojo del entry (si admite)
         try:
             entry.configure(border_color=ERROR_RED, border_width=2)
         except Exception:
             pass
-        # ubicar en la misma fila que el entry, col=2
         parent = entry.master
         info = entry.grid_info()
         row = int(info.get("row", 0))
-
-        # si ya existe, actualizar
         if entry in self._labels:
             _, lbl = self._labels[entry]
             lbl.configure(text=message)
             return
-
         lbl = ctk.CTkLabel(parent, text=message, text_color=ERROR_RED, justify="left",
                            font=ctk.CTkFont("Segoe UI", 10))
         lbl.grid(row=row, column=2, sticky="w", padx=(8, 0))
@@ -87,10 +69,8 @@ class ErrorInline:
         pair = self._labels.pop(entry, None)
         if pair:
             _, lbl = pair
-            try:
-                lbl.destroy()
-            except Exception:
-                pass
+            try: lbl.destroy()
+            except Exception: pass
 
     def any_error(self) -> bool:
         return bool(self._labels)
@@ -148,7 +128,7 @@ def open_win_home(parent: ctk.CTk):
         entry.insert(0, txt)
         remember_valid(entry)
 
-    # Campos monetarios (validación estricta + formateo al salir)
+    # Validadores
     def bind_money(entry: ctk.CTkEntry, *, min_val: float = 0.0, max_val: float | None = None,
                    required: bool = False, field_name: str = "Monto"):
         def _focusout(_):
@@ -162,20 +142,17 @@ def open_win_home(parent: ctk.CTk):
             val = parse_money_strict(txt)
             if val is None:
                 err.show(entry, f"{field_name}: valor inválido")
-                revert_to_last_valid(entry)
-                return
+                revert_to_last_valid(entry); return
             if val < min_val:
                 err.show(entry, f"{field_name}: mínimo {min_val:,.2f}")
                 revert_to_last_valid(entry); return
             if max_val is not None and val > max_val:
                 err.show(entry, f"{field_name}: máximo {max_val:,.2f}")
                 revert_to_last_valid(entry); return
-            # ok
             err.clear(entry)
             set_text(entry, fmt_money(val))
         entry.bind("<FocusOut>", _focusout)
 
-    # Enteros con rango
     def bind_int(entry: ctk.CTkEntry, *, min_val: int = 0, max_val: int | None = None,
                  required: bool = False, field_name: str = "Valor"):
         def _focusout(_):
@@ -203,7 +180,6 @@ def open_win_home(parent: ctk.CTk):
             set_text(entry, str(val))
         entry.bind("<FocusOut>", _focusout)
 
-    # Texto sin dígitos (para nombre y tipo de mascota)
     def bind_no_digits(entry: ctk.CTkEntry, *, required=False, field_name="Texto"):
         def _keyrelease(_):
             txt = entry.get()
@@ -220,7 +196,6 @@ def open_win_home(parent: ctk.CTk):
             if required and txt == "":
                 err.show(entry, f"{field_name}: requerido")
                 return
-            # si contiene dígitos (por pegado), error
             if any(ch.isdigit() for ch in txt):
                 err.show(entry, f"{field_name}: sin números")
                 return
@@ -234,7 +209,6 @@ def open_win_home(parent: ctk.CTk):
 
     main = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=radius)
     main.pack(fill="both", expand=True, padx=pad, pady=pad)
-    # columnas: 0 = label, 1 = input, 2 = error
     main.grid_columnconfigure(0, weight=3)
     main.grid_columnconfigure(1, weight=2)
     main.grid_columnconfigure(2, weight=1)
@@ -247,6 +221,85 @@ def open_win_home(parent: ctk.CTk):
     ctk.CTkLabel(main, text="Completa tus datos para recibir recomendaciones personalizadas.",
                  text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl))\
         .grid(row=0, column=1, sticky="e", padx=pad)
+
+    # === Botón Inicio (arriba derecha) ===
+    def _save_for_nav() -> bool:
+        """Valida, vuelca widgets a 'state' y guarda. Sin mensajes 'OK' para no duplicar diálogos."""
+        if not _validate_all_inline():
+            messagebox.showerror("Revisa tus campos", "Hay datos por corregir (marcados en rojo).")
+            return False
+        # Volcar widgets a state (idéntico a _save)
+        state["usuario"]["nombre"] = ent_nombre.get().strip()
+        state["usuario"]["edad"] = to_int(ent_edad.get(), 0)
+        state["usuario"]["genero"] = cmb_genero.get()
+        state["usuario"]["ubicacion"]["pais"] = cmb_pais.get()
+        state["usuario"]["ubicacion"]["ciudad"] = ent_ciudad.get().strip()
+        state["usuario"]["email"] = ent_email.get().strip()
+
+        # Ingresos se mantienen (se editan en ventana Ingresos)
+
+        state["situacion"]["ocupacion"] = cmb_ocup.get()
+        state["situacion"]["dependientes"] = to_int(ent_dep.get(), 0) or 0
+        state["situacion"]["vivienda"]["tipo"] = cmb_viv.get()
+        state["situacion"]["vivienda"]["gasto_mensual"] = parse_money_strict(ent_gasto_viv.get()) or 0.0
+        state["situacion"]["transporte"] = cmb_transp.get()
+        state["situacion"]["mascotas"]["tiene"] = bool(mascotas_var.get())
+        state["situacion"]["mascotas"]["tipo"] = ent_tipo_masc.get().strip()
+        state["situacion"]["habitos"]["comer_fuera"] = to_int(ent_h_comer.get(), 0) or 0
+        state["situacion"]["habitos"]["cafe_fuera"] = to_int(ent_h_cafe.get(), 0) or 0
+        state["situacion"]["habitos"]["compras_online"] = to_int(ent_h_online.get(), 0) or 0
+        state["situacion"]["gasto_fijo_mensual"] = parse_money_strict(ent_gasto_fijo.get()) or 0.0
+
+        deuda_tipo = cmb_deuda_tipo.get()
+        tiene_deuda = deuda_tipo != "No tengo"
+        state["situacion"]["deudas"]["tiene"] = tiene_deuda
+        state["situacion"]["deudas"]["tipos"] = [] if not tiene_deuda else ([deuda_tipo] if deuda_tipo != "Varias" else ["Varias"])
+        state["situacion"]["deudas"]["pago_mensual_total"] = 0.0 if not tiene_deuda else (parse_money_strict(ent_deu_pago.get()) or 0.0)
+
+        state["metas"]["principal"] = cmb_meta.get()
+        state["metas"]["monto_objetivo"] = parse_money_strict(ent_meta_monto.get()) or 0.0
+        state["metas"]["horizonte_meses"] = to_int(ent_meta_meses.get(), 1) or 1
+        state["metas"]["aportacion_mensual"] = parse_money_strict(ent_meta_aport.get()) or 0.0
+        state["metas"]["fondo_emergencia_meses"] = to_int(cmb_meta_emerg.get(), 3) or 3
+
+        state["preferencias"]["recordatorios"]["activo"] = bool(rec_var.get())
+        state["preferencias"]["recordatorios"]["frecuencia"] = cmb_rec_freq.get()
+        state["preferencias"]["alertas_sobrepresupuesto"]["activo"] = bool(alert_var.get())
+        state["preferencias"]["alertas_sobrepresupuesto"]["umbral_porcentaje"] = to_int(ent_umbral.get(), 15) or 15
+        state["preferencias"]["consentimiento_datos_locales"] = True
+
+        try:
+            save_profile(state)
+            _update_summary()  # recalcular tarjetas
+            return True
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo guardar el perfil:\n{e}")
+            return False
+
+    def _go_home():
+        """Guarda, cierra esta ventana y abre el menú principal como Toplevel del root oculto."""
+        if not _save_for_nav():
+            return
+        try:
+            from app.main import open_main_menu  # evita import circular al cargar el módulo
+            root = win.master if isinstance(win.master, (ctk.CTk, tk.Tk)) else None
+            if root is None:
+                messagebox.showerror("Error", "No se encontró la ventana principal para volver a Inicio.")
+                return
+            # abrir menú
+            open_main_menu(root)
+            # cerrar esta
+            win.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"No fue posible abrir Inicio:\n{e}")
+
+    btn_inicio = ctk.CTkButton(
+        main, text="⟵ Inicio",
+        fg_color="white", hover_color="#F8FAFF",
+        text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
+        corner_radius=8, command=_go_home
+    )
+    btn_inicio.grid(row=0, column=2, sticky="e", padx=pad, pady=(pad, 8))
 
     # Tabs
     tabs = ctk.CTkTabview(
@@ -262,7 +315,6 @@ def open_win_home(parent: ctk.CTk):
     tab_metas = tabs.add("Metas")
     tab_pref  = tabs.add("Preferencias")
 
-    # configurar columnas de cada tab: 0 label / 1 input / 2 error
     for tab in (tab_gen, tab_sit, tab_deu, tab_metas, tab_pref):
         tab.grid_columnconfigure(0, weight=0)
         tab.grid_columnconfigure(1, weight=1)
@@ -345,11 +397,6 @@ def open_win_home(parent: ctk.CTk):
             err.clear(ent_email); remember_valid(ent_email)
     ent_email.bind("<FocusOut>", _email_focusout)
     row += 1
-
-    # >>>> NOTA: Se eliminaron de PERFIL estos campos:
-    # - Frecuencia de ingreso
-    # - Ingreso fijo mensual
-    # Ahora se gestionan exclusivamente en la ventana de "Ingresos".
 
     # ---------- TAB SITUACIÓN ----------
     row = 0
@@ -513,12 +560,11 @@ def open_win_home(parent: ctk.CTk):
         ent_ciudad.insert(0, u.get("ubicacion", {}).get("ciudad", ""))
         ent_email.insert(0, u.get("email", ""))
 
-        # Ingresos: SOLO lectura desde estado (editables en ventana "Ingresos")
+        # Ingresos: solo lectura para resumen (se editan en Ingresos)
         ing = state.get("ingresos", {})
         ingreso_fijo_ro = float(ing.get("fijo_mensual", 0.0) or 0.0)
         freq_ro         = ing.get("frecuencia", "Mensual")
 
-        # Situación
         s = state["situacion"]
         cmb_ocup.set(s.get("ocupacion", "Estudiante"))
         ent_dep.insert(0, str(s.get("dependientes", 0)))
@@ -560,7 +606,6 @@ def open_win_home(parent: ctk.CTk):
         ent_umbral.insert(0, str(al.get("umbral_porcentaje", 15)))
         cons_var.set(bool(p.get("consentimiento_datos_locales", True)))
 
-        # Inicializar "último válido"
         for e in (ent_nombre, ent_edad, ent_ciudad, ent_email,
                   ent_dep, ent_gasto_viv,
                   ent_h_comer, ent_h_cafe, ent_h_online,
@@ -568,18 +613,15 @@ def open_win_home(parent: ctk.CTk):
                   ent_meta_monto, ent_meta_meses, ent_meta_aport, ent_umbral, ent_tipo_masc):
             remember_valid(e)
 
-        # Actualiza resumen con ingreso de SOLO lectura
         _update_summary(ingreso_fijo_ro, freq_ro)
 
     # --------- Resumen ----------
     def _update_summary(ingreso_fijo_ro: float | None = None, freq_ro: str | None = None):
-        # Ingreso desde estado (read-only)
         if ingreso_fijo_ro is None or freq_ro is None:
             ing = state.get("ingresos", {})
             ingreso_fijo_ro = float(ing.get("fijo_mensual", 0.0) or 0.0)
             freq_ro         = ing.get("frecuencia", "Mensual")
 
-        # Gastos y deudas
         gasto_viv   = parse_money_strict(ent_gasto_viv.get()) or 0.0
         gasto_fijo  = parse_money_strict(ent_gasto_fijo.get()) or 0.0
         pago_deuda  = parse_money_strict(ent_deu_pago.get()) or 0.0
@@ -608,21 +650,17 @@ def open_win_home(parent: ctk.CTk):
         else:
             lbl_meta.configure(text="Define objetivo y horizonte para calcular el requerido mensual.")
 
-    # --------- Guardar ----------
+    # --------- Guardar (botonera inferior) ----------
     def _validate_all_inline() -> bool:
         err.clear_all()
-        # Disparar validación onBlur de campos (ya SIN ingreso/frecuencia)
         for e in (ent_nombre, ent_edad, ent_email,
                   ent_dep, ent_gasto_viv,
                   ent_h_comer, ent_h_cafe, ent_h_online,
                   ent_deu_pago, ent_gasto_fijo,
                   ent_meta_monto, ent_meta_meses, ent_meta_aport,
                   ent_umbral, ent_tipo_masc):
-            try:
-                e.event_generate("<FocusOut>")
-            except Exception:
-                pass
-        # Si “No tengo”, limpiar errores del pago y fijar 0
+            try: e.event_generate("<FocusOut>")
+            except Exception: pass
         if (cmb_deuda_tipo.get() or "") == "No tengo":
             err.clear(ent_deu_pago)
             set_text(ent_deu_pago, "0.00")
@@ -632,54 +670,10 @@ def open_win_home(parent: ctk.CTk):
         if not _validate_all_inline():
             messagebox.showerror("Revisa tus campos", "Algunos datos necesitan corrección (marcados en rojo).")
             return
-
-        state["usuario"]["nombre"] = ent_nombre.get().strip()
-        state["usuario"]["edad"] = to_int(ent_edad.get(), 0)
-        state["usuario"]["genero"] = cmb_genero.get()
-        state["usuario"]["ubicacion"]["pais"] = cmb_pais.get()
-        state["usuario"]["ubicacion"]["ciudad"] = ent_ciudad.get().strip()
-        state["usuario"]["email"] = ent_email.get().strip()
-
-        # Ingresos: no se editan aquí. Mantener lo que haya en state["ingresos"] (lo actualiza la ventana Ingresos)
-
-        state["situacion"]["ocupacion"] = cmb_ocup.get()
-        state["situacion"]["dependientes"] = to_int(ent_dep.get(), 0) or 0
-        state["situacion"]["vivienda"]["tipo"] = cmb_viv.get()
-        state["situacion"]["vivienda"]["gasto_mensual"] = parse_money_strict(ent_gasto_viv.get()) or 0.0
-        state["situacion"]["transporte"] = cmb_transp.get()
-        state["situacion"]["mascotas"]["tiene"] = bool(mascotas_var.get())
-        state["situacion"]["mascotas"]["tipo"] = ent_tipo_masc.get().strip()
-        state["situacion"]["habitos"]["comer_fuera"] = to_int(ent_h_comer.get(), 0) or 0
-        state["situacion"]["habitos"]["cafe_fuera"] = to_int(ent_h_cafe.get(), 0) or 0
-        state["situacion"]["habitos"]["compras_online"] = to_int(ent_h_online.get(), 0) or 0
-        state["situacion"]["gasto_fijo_mensual"] = parse_money_strict(ent_gasto_fijo.get()) or 0.0
-
-        deuda_tipo = cmb_deuda_tipo.get()
-        tiene_deuda = deuda_tipo != "No tengo"
-        state["situacion"]["deudas"]["tiene"] = tiene_deuda
-        state["situacion"]["deudas"]["tipos"] = [] if not tiene_deuda else ([deuda_tipo] if deuda_tipo != "Varias" else ["Varias"])
-        state["situacion"]["deudas"]["pago_mensual_total"] = 0.0 if not tiene_deuda else (parse_money_strict(ent_deu_pago.get()) or 0.0)
-
-        state["metas"]["principal"] = cmb_meta.get()
-        state["metas"]["monto_objetivo"] = parse_money_strict(ent_meta_monto.get()) or 0.0
-        state["metas"]["horizonte_meses"] = to_int(ent_meta_meses.get(), 1) or 1
-        state["metas"]["aportacion_mensual"] = parse_money_strict(ent_meta_aport.get()) or 0.0
-        state["metas"]["fondo_emergencia_meses"] = to_int(cmb_meta_emerg.get(), 3) or 3
-
-        state["preferencias"]["recordatorios"]["activo"] = bool(rec_var.get())
-        state["preferencias"]["recordatorios"]["frecuencia"] = cmb_rec_freq.get()
-        state["preferencias"]["alertas_sobrepresupuesto"]["activo"] = bool(alert_var.get())
-        state["preferencias"]["alertas_sobrepresupuesto"]["umbral_porcentaje"] = to_int(ent_umbral.get(), 15) or 15
-        state["preferencias"]["consentimiento_datos_locales"] = True
-
-        try:
-            save_profile(state)
-            _update_summary()  # recalcula con ingreso RO cargado del state
+        # misma lógica de _save_for_nav(), pero con mensaje de éxito
+        if _save_for_nav():
             messagebox.showinfo("OK", "Perfil guardado correctamente.")
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo guardar el perfil:\n{e}")
 
-    # ---------- Botones ----------
     btns = ctk.CTkFrame(main, fg_color=CARD_BG)
     btns.grid(row=2, column=0, columnspan=3, sticky="e", padx=pad, pady=(0, pad))
     ctk.CTkButton(btns, text="Guardar",
@@ -695,4 +689,3 @@ def open_win_home(parent: ctk.CTk):
     # ---------- Inicializar ----------
     state = load_profile()
     _load_to_widgets()
-

@@ -1,4 +1,4 @@
-# win_form.py — ZAVE (Ingresos fijos + variables, validación, total en vivo, guarda en profile.json)
+# win_form.py — ZAVE (Ingresos fijos + variables, validación, total en vivo, guarda en profile.json + botón Inicio)
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import messagebox
@@ -247,13 +247,14 @@ def open_win_form(parent: ctk.CTk):
     _recalcular_total()
 
     # Guardar en profile.json (sin diálogo)
-    def _guardar():
+    def _guardar(*, silent: bool = False) -> bool:
         # Validar fijo
         fijo_val = parse_money_strict(ent_ingreso_fijo.get())
         if fijo_val is None or fijo_val < 0:
-            messagebox.showerror("Error", "El ingreso fijo mensual debe ser un número ≥ 0.")
+            if not silent:
+                messagebox.showerror("Error", "El ingreso fijo mensual debe ser un número ≥ 0.")
             ent_ingreso_fijo.focus_set()
-            return
+            return False
 
         # Actualizar estado
         state.setdefault("ingresos", {})
@@ -262,29 +263,67 @@ def open_win_form(parent: ctk.CTk):
         # Clonar variables (por si la UI tiene floats)
         state["ingresos"]["variables"] = [{"concepto": x["concepto"], "monto": float(x["monto"])} for x in cont_vars]
 
-        # (Opcional) podemos calcular un total mensual estimado:
+        # (Opcional) total mensual estimado:
         total_vars = sum(x["monto"] for x in cont_vars)
         state.setdefault("totales", {})
         state["totales"]["ingreso_total_estimado"] = float(fijo_val) + total_vars
 
         try:
             save_profile(state)
-            messagebox.showinfo("OK", "Ingresos guardados en tu perfil.")
+            if not silent:
+                messagebox.showinfo("OK", "Ingresos guardados en tu perfil.")
+            return True
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudieron guardar los datos:\n{e}")
+            if not silent:
+                messagebox.showerror("Error", f"No se pudieron guardar los datos:\n{e}")
+            return False
 
+    # --- Navegación a Inicio (Main) ---
+    def _go_home():
+        # 1) intentar guardado silencioso
+        saved = _guardar(silent=True)
+        if not saved:
+            # si no se pudo guardar (validación), pedir confirmación
+            if not messagebox.askyesno("Volver a inicio",
+                                       "Algunos datos no son válidos y no se guardarán.\n¿Volver a inicio de todas formas?"):
+                return
+        # 2) cerrar esta ventana y el root oculto
+        try:
+            win.destroy()
+        except Exception:
+            pass
+        try:
+            parent.destroy()
+        except Exception:
+            pass
+        # 3) relanzar Main
+        from app.main import main as launch_main
+        launch_main()
+
+    # Botonera
     btns = ctk.CTkFrame(card, fg_color=CARD_BG)
-    btns.grid(row=10, column=0, columnspan=4, sticky="e", padx=pad_x, pady=(0, pad_y))
+    btns.grid(row=10, column=0, columnspan=4, sticky="ew", padx=pad_x, pady=(0, pad_y))
+    btns.grid_columnconfigure(0, weight=1)
+    btns.grid_columnconfigure(1, weight=0)
+    btns.grid_columnconfigure(2, weight=0)
+
+    # Inicio (outlined azul) — a la izquierda
+    ctk.CTkButton(btns, text="⟵ Inicio",
+                  fg_color="white", hover_color="#F8FAFF",
+                  text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
+                  corner_radius=8, height=btn_h, font=ctk.CTkFont("Segoe UI", font_btn),
+                  command=_go_home).grid(row=0, column=0, sticky="w")
+
+    # A la derecha: Guardar y Cerrar
     ctk.CTkButton(btns, text="Guardar",
                   fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
                   corner_radius=8, height=btn_h, font=ctk.CTkFont("Segoe UI", font_btn, "bold"),
-                  command=_guardar).pack(side="right", padx=6)
+                  command=_guardar).grid(row=0, column=1, sticky="e", padx=6)
     ctk.CTkButton(btns, text="Cerrar",
                   fg_color="white", hover_color="#F8FAFF",
                   text_color=TEXT, border_color=SEPARATOR, border_width=2,
                   corner_radius=8, height=btn_h, font=ctk.CTkFont("Segoe UI", font_btn),
-                  command=win.destroy).pack(side="right", padx=6)
-
+                  command=win.destroy).grid(row=0, column=2, sticky="e")
     # Atajos prácticos
     ent_var_concepto.bind("<Return>", lambda _e: ent_var_monto.focus_set())
     ent_var_monto.bind("<Return>", lambda _e: _agregar_var())

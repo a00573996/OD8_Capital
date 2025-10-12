@@ -1,138 +1,158 @@
-# app/splash.py — Splash con barra de progreso determinada (seguro)
+# app/splash.py
+# Splash con animación y barra de progreso (bloqueante), carga de logo desde APPODS/assets.
+
 import customtkinter as ctk
-from PIL import Image
-import os
+import tkinter as tk
+from pathlib import Path
+import time
+
+# Pillow para cargar y escalar el logo SIEMPRE
+from PIL import Image, ImageTk, ImageOps
 
 PRIMARY_BLUE = "#2563EB"
 TEXT         = "#111827"
 TEXT_MUTED   = "#6B7280"
-CARD_BG      = "#FFFFFF"
-BG           = "#F3F4F6"
+BG           = "#FFFFFF"
 
-class Splash:
-    def __init__(self, root: ctk.CTk):
-        self.root = root
-        self.top = ctk.CTkToplevel(root)
-        self.top.overrideredirect(True)
+# --- Rutas: prioriza APPODS/assets/ZAVE LOGO.png ---
+PROJECT_ASSETS_DIR = (Path(__file__).resolve().parents[1] / "assets").resolve()
+APP_ASSETS_DIR     = (Path(__file__).resolve().parent / "assets").resolve()
+_LOGO_CANDIDATES = [
+    PROJECT_ASSETS_DIR / "ZAVE LOGO.png",  # APPODS/assets
+    APP_ASSETS_DIR / "ZAVE LOGO.png",      # app/assets (fallback)
+]
+
+def _pick_logo_path():
+    for p in _LOGO_CANDIDATES:
+        if p.exists():
+            return p
+    return _LOGO_CANDIDATES[0]
+
+LOGO_PATH = _pick_logo_path()
+
+def _load_logo_tkimage(target_px: int = 164):
+    """
+    Carga el logo y lo escala para que quepa en un cuadrado target_px x target_px
+    manteniendo proporción. Si tiene canal alpha, recorta el bounding box del alpha
+    para eliminar márgenes transparentes.
+    """
+    try:
+        img = Image.open(str(LOGO_PATH)).convert("RGBA")
+
+        # Recorte por alpha (si hay transparencia, quita márgenes transparentes)
         try:
-            self.top.attributes("-topmost", True)
+            alpha = img.split()[-1]
+            bbox = alpha.getbbox()
+            if bbox:
+                img = img.crop(bbox)
         except Exception:
             pass
 
-        w, h = 560, 360
-        sw, sh = self.top.winfo_screenwidth(), self.top.winfo_screenheight()
-        x, y = (sw - w)//2, int((sh - h)*0.33)
-        self.top.geometry(f"{w}x{h}+{x}+{y}")
+        # Escalar manteniendo proporción para que QUEPA en target_px
+        img = ImageOps.contain(img, (target_px, target_px))
 
-        outer = ctk.CTkFrame(self.top, fg_color=BG)
-        outer.pack(fill="both", expand=True, padx=16, pady=16)
+        return ImageTk.PhotoImage(img)
+    except Exception:
+        # Fallback sólido si no se puede abrir el logo
+        img = Image.new("RGBA", (target_px, target_px), (37, 99, 235, 255))
+        return ImageTk.PhotoImage(img)
 
-        card = ctk.CTkFrame(outer, fg_color=CARD_BG, corner_radius=14)
-        card.pack(fill="both", expand=True, padx=10, pady=10)
+def run_splash_then(callback, duration_ms: int = 1800):
+    """
+    Muestra un splash animado durante `duration_ms` ms y luego ejecuta `callback()`.
+    Bloquea la ejecución con su propio mainloop y destruye todo antes de llamar al callback.
+    """
+    # Root CTk (oculto). El splash será un Toplevel sobre este root.
+    root = ctk.CTk()
+    root.withdraw()
 
-        content = ctk.CTkFrame(card, fg_color=CARD_BG)
-        content.pack(expand=True)
+    # --- Toplevel splash ---
+    splash = tk.Toplevel(root)
+    splash.overrideredirect(True)
+    splash.configure(bg=BG)
+    splash.attributes("-topmost", True)
 
-        # Logo
-        logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "ZAVE LOGO.png")
-        if os.path.exists(logo_path):
-            img = Image.open(logo_path)
-            cimg = ctk.CTkImage(img, size=(120, 120))
-            ctk.CTkLabel(content, image=cimg, text="").pack(pady=(24, 8))
-            self._logo_img = cimg  # evitar GC
+    # Tamaño + centrado
+    W, H = 520, 360
+    sw, sh = splash.winfo_screenwidth(), splash.winfo_screenheight()
+    x = (sw - W) // 2
+    y = (sh - H) // 2
+    splash.geometry(f"{W}x{H}+{x}+{y}")
+
+    # ---- Contenido ----
+    body = tk.Frame(splash, bg=BG)
+    body.pack(fill="both", expand=True, padx=22, pady=22)
+
+    # Logo siempre redimensionado
+    tkimg = _load_logo_tkimage(164)
+    lbl_logo = tk.Label(body, image=tkimg, bg=BG)
+    lbl_logo.image = tkimg  # evitar GC
+    lbl_logo.pack(pady=(8, 0))
+
+    lbl_title = tk.Label(body, text="ZAVE", font=("Segoe UI Semibold", 22), fg=TEXT, bg=BG)
+    lbl_sub   = tk.Label(body, text="Finanzas personales (ODS 8)", font=("Segoe UI", 11), fg=TEXT_MUTED, bg=BG)
+    lbl_title.pack(pady=(10, 2))
+    lbl_sub.pack(pady=(0, 14))
+
+    # ProgressBar de CustomTkinter dentro de un frame CTk
+    pb_wrap = ctk.CTkFrame(body, fg_color=BG)
+    pb_wrap.pack(fill="x", padx=6, pady=(0, 8))
+    pb = ctk.CTkProgressBar(pb_wrap, height=12, corner_radius=8, progress_color=PRIMARY_BLUE)
+    pb.pack(fill="x", padx=8, pady=8)
+    pb.set(0.0)
+
+    lbl_loading = tk.Label(body, text="Cargando", font=("Segoe UI", 10), fg=TEXT_MUTED, bg=BG)
+    lbl_loading.pack()
+
+    # --- Animación (after loop) ---
+    start_t   = time.perf_counter()
+    total_s   = max(0.2, duration_ms / 1000.0)  # evita 0
+    after_id  = {"id": None}
+    dots_step = {"i": 0}
+
+    def ease_out_cubic(x: float) -> float:
+        return 1 - pow(1 - x, 3)
+
+    def tick():
+        t = time.perf_counter() - start_t
+        prog = min(1.0, t / total_s)
+        pb.set(ease_out_cubic(prog))
+
+        # Anima "Cargando..." con puntos
+        dots_step["i"] = (dots_step["i"] + 1) % 4
+        lbl_loading.config(text="Cargando" + "." * dots_step["i"] + " " * (3 - dots_step["i"]))
+
+        if prog < 1.0:
+            after_id["id"] = splash.after(70, tick)
         else:
-            ctk.CTkLabel(content, text="💰", font=ctk.CTkFont("Segoe UI", 72)).pack(pady=(24, 8))
-
-        ctk.CTkLabel(content, text="ZAVE", text_color=TEXT,
-                     font=ctk.CTkFont("Segoe UI Semibold", 28)).pack()
-        ctk.CTkLabel(content, text="Organiza tus finanzas — ODS 8",
-                     text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", 14)).pack(pady=(4, 16))
-
-        # Barra de progreso determinada (llenado suave)
-        self.progress = ctk.CTkProgressBar(content, height=10, corner_radius=6, progress_color=PRIMARY_BLUE)
-        self.progress.set(0.0)
-        self.progress.pack(fill="x", padx=40, pady=(0, 8))
-        self.lbl_status = ctk.CTkLabel(content, text="Cargando…", text_color=TEXT_MUTED,
-                                       font=ctk.CTkFont("Segoe UI", 12))
-        self.lbl_status.pack(pady=(0, 18))
-
-        # Estado interno de la animación
-        self._interval_ms = 20         # ~50 FPS
-        self._duration_ms = 1200       # valor por defecto
-        self._elapsed_ms  = 0
-        self._tick_id     = None
-        self._on_done     = None
-        self._completed   = False
-
-        self.top.protocol("WM_DELETE_WINDOW", self._on_user_close)
-
-    # API pública
-    def run(self, duration_ms: int = 1400, on_done=None):
-        self._on_done     = on_done
-        self._duration_ms = max(400, int(duration_ms))  # poner mínimo visual
-        self._elapsed_ms  = 0
-        self.progress.set(0.0)
-        self._schedule_tick()
-
-    # Lógica de progreso
-    def _schedule_tick(self):
-        # seguridad: si la ventana ya no existe, no programes más
-        if not (self.top and self.top.winfo_exists()):
-            return
-        self._tick_id = self.top.after(self._interval_ms, self._tick)
-
-    def _tick(self):
-        self._tick_id = None
-        if not (self.top and self.top.winfo_exists()):
-            return
-
-        self._elapsed_ms += self._interval_ms
-        p = min(1.0, self._elapsed_ms / self._duration_ms)
-        try:
-            self.progress.set(p)
-        except Exception:
-            pass
-
-        if p >= 1.0:
-            self._finish()
-        else:
-            self._schedule_tick()
-
-    # Cierre/avance seguro
-    def _finish(self):
-        if self._completed:
-            return
-        self._completed = True
-        self._cancel_tick()
-        # destruir splash primero
-        self._destroy_only()
-        # luego lanzar callback
-        if callable(self._on_done):
-            self.root.after(0, self._on_done)
-
-    def _on_user_close(self):
-        # Si el usuario cierra el splash, procedemos igual al main
-        if not self._completed:
-            self._completed = True
-            self._cancel_tick()
-            self._destroy_only()
-            if callable(self._on_done):
-                self.root.after(0, self._on_done)
-
-    def _cancel_tick(self):
-        if self._tick_id is not None:
+            # Cerrar splash y root ANTES de lanzar el main
             try:
-                self.top.after_cancel(self._tick_id)
+                if after_id["id"]:
+                    splash.after_cancel(after_id["id"])
             except Exception:
                 pass
-            self._tick_id = None
+            try:
+                splash.destroy()
+            except Exception:
+                pass
+            try:
+                root.destroy()
+            except Exception:
+                pass
+            # Lanzar main
+            try:
+                callback()
+            except Exception:
+                pass
 
-    def _destroy_only(self):
+    # Mostrar y arrancar animación
+    root.after(0, splash.deiconify)
+    tick()
+    try:
+        root.mainloop()
+    except Exception:
+        # Si algo falla en el loop, lanzar el callback igualmente
         try:
-            self.progress.set(1.0)
-        except Exception:
-            pass
-        try:
-            self.top.destroy()
+            callback()
         except Exception:
             pass

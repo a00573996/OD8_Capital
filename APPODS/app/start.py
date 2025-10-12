@@ -1,23 +1,30 @@
-# app/start.py — Arranque con splash y luego menú principal
-import customtkinter as ctk
-from app.splash import Splash
-from app.main import open_main_menu
+from app.main import main as launch_main
 
-def run_splash_then():
-    ctk.set_appearance_mode("light")
-    ctk.set_default_color_theme("green")
+def _start():
+    # Intentar usar el splash si está disponible
+    try:
+        from app.splash import run_splash_then
+    except Exception:
+        # No hay splash o falló la importación → ir directo a main
+        launch_main()
+        return
 
-    root = ctk.CTk()
-    root.withdraw()  # root oculto durante el splash
+    # Ejecutar con firma moderna primero
+    try:
+        run_splash_then(launch_main)
+        return
+    except TypeError:
+        # Compatibilidad con versiones que requieren duración
+        try:
+            run_splash_then(launch_main, 1800)  # argumento posicional por compatibilidad
+            return
+        except Exception:
+            pass
+    except Exception:
+        pass
 
-    splash = Splash(root)
-
-    def _launch_main():
-        # Abre el menú principal como Toplevel sobre el mismo root
-        open_main_menu(root)
-
-    splash.run(duration_ms=1000, on_done=_launch_main)
-    root.mainloop()
+    # Si algo salió mal con el splash, continuar a main
+    launch_main()
 
 if __name__ == "__main__":
-    run_splash_then()
+    _start()

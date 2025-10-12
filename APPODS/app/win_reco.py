@@ -1,8 +1,8 @@
-# app/win_reco.py — Recomendaciones personalizadas (MX), con scroll y botón Inicio
+# app/win_reco.py — Recomendaciones personalizadas (MX), con scroll, botón Inicio y Exportar
 from __future__ import annotations
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 
 from core.profile import load_profile, save_profile
 from core.classifier import classify_user
@@ -53,9 +53,7 @@ def _totales_por_categoria():
         p,_ = _split_categoria(r.get("categoria","Otros") or "Otros")
         cats[p] = cats.get(p, 0.0) + v
         total += v
-    # ordenar desc
     ordered = sorted(cats.items(), key=lambda kv: kv[1], reverse=True)
-    # con porcentajes
     with_pct = [(k, v, (v/total if total>0 else 0.0)) for k,v in ordered]
     return with_pct, total
 
@@ -98,7 +96,6 @@ def _build_recos(cls: dict, state: dict, topcats: list[tuple[str,float,float]]):
     ca_pct  = float(m.get("capacidad_ahorro_pct", 0.0))
     igd     = float(m.get("IGD", 0.0))
 
-    # Esenciales (aprox) para fondo: vivienda + fijos + deudas
     ess = max(0.0, imt * (cv + cf + dsr))
 
     # --- Corto plazo (0–30 días) ---
@@ -108,33 +105,27 @@ def _build_recos(cls: dict, state: dict, topcats: list[tuple[str,float,float]]):
         rec_corto.append("Revisa contrato de vivienda: renegocia renta/servicios o considera roommate para bajar la carga < 30%.")
     if dsr >= 0.20:
         rec_corto.append("Define estrategia de deudas (avalancha o bola de nieve) y evita nuevos créditos.")
-    # Top categorías específicas
     if topcats:
         rec_corto.append("Ataca primero las categorías más altas con metas de reducción concretas (10–20%):")
         for k, v, p in topcats[:5]:
             rec_corto.append(f"• {k}: hoy {_fmt_money(v)} ({_pct_text(p)} del total). Propón tope mensual = {_fmt_money(v*0.85)}.")
 
     # --- Mediano plazo (1–6 meses) ---
-    # Fondo de emergencia por estabilidad y dependientes
-    est = lab.get("estabilidad_ingreso","Fijo").lower()
+    est = (lab.get("estabilidad_ingreso","Fijo") or "").lower()
     dependientes = int(state.get("situacion",{}).get("dependientes",0) or 0)
     base_months = 6 if ("alta" in est or "media" in est) else 3
     if dependientes>0: base_months += 3
     fondo_meta = base_months * ess
     rec_med.append(f"Fondo de emergencia: {base_months} meses de esenciales ≈ {_fmt_money(fondo_meta)}. Aporta automático: {_fmt_money(max(0.0, fondo_meta/ max(1, base_months*2)))}+/mes.")
 
-    # Meta principal
     meta_p = metas.get("principal","Ahorro de emergencia")
     ratio  = float(m.get("ratio_aporte", 0.0))
     aporte_lbl = metas.get("aporte_label","Aporte insuficiente")
     if meta_p and meta_p != "N/D":
         rec_med.append(f"Meta: {meta_p} — estado: {aporte_lbl}. Ajusta aportación para estar ≥100% del requerido (hoy {ratio*100:.0f}%).")
 
-    # Consumo discrecional (IGD)
     if igd >= 60:
         rec_med.append("Tope discrecional: fija presupuestos envelope (comer/café/online) para no exceder 15–20% del ingreso.")
-
-    # Vivienda/fijos
     if cv >= 0.45:
         rec_med.append("Plan de mudanza (3–6 meses): busca opciones para llevar vivienda < 30% del ingreso.")
     if cf >= 0.50:
@@ -145,14 +136,12 @@ def _build_recos(cls: dict, state: dict, topcats: list[tuple[str,float,float]]):
         rec_largo.append("Automatiza inversión del 10–20% del ingreso (tras cumplir fondo de emergencia).")
     else:
         rec_largo.append("Primero consolida fondo y reduce cargas; luego invierte de forma automática.")
-
     if dsr >= 0.35:
         rec_largo.append("Consolida deudas costosas si es viable (sin alargar plazo total) y libera flujo para metas.")
     if lab.get("segmento_ingreso") in ("Medio alto","Alto"):
         rec_largo.append("Optimiza impuestos y formaliza objetivos (AFORE/planes personales, inversión diversificada).")
 
-    # Afinar por hábitos (tags)
-    tags = set(consumo.get("tags", []))
+    tags = set((consumo or {}).get("tags", []))
     if "Foodie" in tags:
         rec_med.append("Batch cooking y menú semanal para recortar 15–25% en ‘comer fuera’.")
     if "Café lover" in tags:
@@ -215,7 +204,7 @@ def open_win_reco(parent: ctk.CTk):
 
     def _go_home():
         try:
-            win.withdraw()
+            win.withdraw()           # cerramos visualmente esta ventana
             win.after(60, _start_main)
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo volver a Inicio:\n{e}")
@@ -243,7 +232,7 @@ def open_win_reco(parent: ctk.CTk):
         try:
             cls = classify_user(state)
             state["classification"] = cls
-            save_profile(state)  # guardar para futuras vistas
+            save_profile(state)
         except Exception as e:
             messagebox.showwarning("Aviso", f"No se pudo clasificar automáticamente:\n{e}")
             cls = {}
@@ -337,7 +326,7 @@ def open_win_reco(parent: ctk.CTk):
         _render_section(title, recs.get(title, []), r)
         r += 1
 
-    # ---------- Acciones rápidas ----------
+    # ---------- Acciones rápidas + Recalcular + Exportar ----------
     actions = ctk.CTkFrame(card, fg_color=CARD_BG)
     actions.grid(row=5, column=0, columnspan=2, sticky="e", padx=pad, pady=(0,pad))
 
@@ -366,7 +355,6 @@ def open_win_reco(parent: ctk.CTk):
                   text_color=PRIMARY_BLUE, border_color=PRIMARY_BLUE, border_width=2,
                   corner_radius=8, command=_open_list).pack(side="left", padx=6)
 
-    # Refrescar recomendaciones (relee profile + recalcula)
     def _refresh():
         s = load_profile()
         try:
@@ -380,6 +368,99 @@ def open_win_reco(parent: ctk.CTk):
     ctk.CTkButton(actions, text="Recalcular",
                   fg_color=PRIMARY_BLUE, hover_color=PRIMARY_BLUE_DARK, text_color="white",
                   corner_radius=8, command=_refresh).pack(side="left", padx=6)
+
+    # ------- Exportar (MD/HTML/PDF) -------
+    def _build_markdown(cls: dict, state: dict, topcats, recs) -> str:
+        u = state.get("usuario", {})
+        m = (cls or {}).get("metrics", {}) or {}
+        lbl = (cls or {}).get("labels", {}) or {}
+
+        lines = []
+        lines.append("# Recomendaciones ZAVE\n")
+        lines.append(f"**Persona**: {cls.get('persona','N/D')}\n")
+        lines.append(f"**Nombre**: {u.get('nombre','N/D')} | **Edad**: {u.get('edad','N/D')} | **Ciudad**: {state.get('usuario',{}).get('ubicacion',{}).get('ciudad','')}\n")
+        lines.append(f"**Segmento**: {lbl.get('segmento_ingreso','N/D')}  |  **Estabilidad**: {lbl.get('estabilidad_ingreso','N/D')}  |  **Ahorro**: {lbl.get('capacidad_ahorro','N/D')}\n")
+        lines.append("\n---\n")
+        lines.append("## Métricas\n")
+        lines.append(f"- Ingreso total mensual: {_fmt_money(m.get('ingreso_total_mensual',0))}")
+        lines.append(f"- Capacidad de ahorro: {_pct_text(float(m.get('capacidad_ahorro_pct',0)))} ({_fmt_money(m.get('capacidad_ahorro_mxn',0))}/mes)")
+        lines.append(f"- Carga vivienda: {_pct_text(float(m.get('carga_vivienda',0)))}")
+        lines.append(f"- Carga deudas: {_pct_text(float(m.get('carga_deuda',0)))}")
+        lines.append(f"- Gastos fijos: {_pct_text(float(m.get('carga_fijos',0)))}")
+        lines.append(f"- IGD (discrecional): {float(m.get('IGD',0)):.0f}/100\n")
+        lines.append("## Top categorías de gasto\n")
+        if not topcats:
+            lines.append("- (Sin datos)\n")
+        else:
+            for k, v, p in topcats[:10]:
+                lines.append(f"- {k}: {_fmt_money(v)} ({_pct_text(p)})")
+            lines.append("")
+        for title in ("Corto plazo (0–30 días)", "Mediano plazo (1–6 meses)", "Largo plazo (6–24 meses)"):
+            lines.append(f"## {title}")
+            arr = recs.get(title, [])
+            if not arr:
+                lines.append("- (Sin acciones por ahora)")
+            else:
+                for t in arr:
+                    lines.append(f"- {t}")
+            lines.append("")
+        return "\n".join(lines)
+
+    def _export():
+        try:
+            md = _build_markdown(cls, state, topcats, recs)
+            path = filedialog.asksaveasfilename(
+                defaultextension=".md",
+                filetypes=[("Markdown", "*.md"), ("HTML", "*.html"), ("Texto", "*.txt"), ("PDF", "*.pdf")],
+                title="Exportar recomendaciones"
+            )
+            if not path:
+                return
+            lname = path.lower()
+            if lname.endswith(".md") or lname.endswith(".txt"):
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(md)
+            elif lname.endswith(".html"):
+                safe = (md.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;"))
+                html = (
+                    "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+                    "<title>Recomendaciones ZAVE</title>"
+                    "<style>body{font-family: system-ui,Segoe UI,Arial,sans-serif; line-height:1.5; padding:24px;}"
+                    "pre{white-space:pre-wrap;}</style></head><body>"
+                    "<pre>"+ safe + "</pre></body></html>"
+                )
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(html)
+            elif lname.endswith(".pdf"):
+                try:
+                    from reportlab.lib.pagesizes import letter
+                    from reportlab.pdfgen import canvas as rlcanvas
+                    from reportlab.lib.units import inch
+                    from textwrap import wrap
+                    c = rlcanvas.Canvas(path, pagesize=letter)
+                    width, height = letter
+                    y = height - 1*inch
+                    for line in md.splitlines():
+                        for chunk in wrap(line, 95):
+                            c.drawString(0.75*inch, y, chunk)
+                            y -= 14
+                            if y < 0.75*inch:
+                                c.showPage(); y = height - 1*inch
+                    c.save()
+                except Exception as e:
+                    messagebox.showwarning("PDF no disponible", f"No se pudo exportar a PDF: {e}\nSe guardará como Markdown.")
+                    alt = path.rsplit(".",1)[0] + ".md"
+                    with open(alt, "w", encoding="utf-8") as f:
+                        f.write(md)
+                    path = alt
+            messagebox.showinfo("Exportado", f"Archivo guardado:\n{path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo exportar:\n{e}")
+
+    ctk.CTkButton(actions, text="Exportar",
+                  fg_color="white", hover_color="#F8FAFF",
+                  text_color=TEXT, border_color=SEPARATOR, border_width=2,
+                  corner_radius=8, command=_export).pack(side="left", padx=6)
 
     # Ajustar scrollregion
     win.update_idletasks()

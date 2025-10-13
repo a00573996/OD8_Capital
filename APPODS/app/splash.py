@@ -57,7 +57,7 @@ def _load_logo_tkimage(target_px: int = 164):
         img = Image.new("RGBA", (target_px, target_px), (37, 99, 235, 255))
         return ImageTk.PhotoImage(img)
 
-def run_splash_then(callback, duration_ms: int = 1800):
+def run_splash_then(callback, duration_ms: int = 1000):
     """
     Muestra un splash animado durante `duration_ms` ms y luego ejecuta `callback()`.
     Bloquea la ejecución con su propio mainloop y destruye todo antes de llamar al callback.

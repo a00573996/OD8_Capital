@@ -1,4 +1,4 @@
-# app/main.py — ZAVE (Inicio con saludo, logo persistente y navegación)
+# app/main.py — ZAVE (Inicio con saludo en negrita, logo persistente y navegación)
 from __future__ import annotations
 import customtkinter as ctk
 import tkinter as tk
@@ -61,12 +61,7 @@ def _nav_button(parent, text, command, *, radius, font_btn, btn_h, btn_w):
     )
 
 def go_to(open_window_fn, current_root: ctk.CTk):
-    """
-    Cierra Main y abre SOLO la ventana destino.
-    - Destruye el root actual
-    - Crea un nuevo root oculto y abre la ventana destino (Toplevel)
-    - Al cerrar la ventana destino, destruye el nuevo root
-    """
+    """Cierra Main y abre SOLO la ventana destino."""
     try:
         current_root.destroy()
     except Exception:
@@ -116,7 +111,7 @@ def main():
     font_chip     = max(10, int(13 * scale))
     font_btn      = max(10, int(16 * scale))
     font_footer   = max(9,  int(12 * scale))
-    font_saludo   = max(12, int(18 * scale))
+    font_saludo   = max(12, int(20 * scale))
     btn_h         = max(36, int(46 * scale))
     btn_w         = max(280, int(380 * scale))
     pad_outer     = max(20, int(40 * scale))
@@ -151,12 +146,12 @@ def main():
             font=ctk.CTkFont("Segoe UI Semibold", font_title)
         ).pack(pady=(pad_top_title, pad_between))
 
-    # Saludo personalizado
+    # Saludo personalizado en negrita
     ctk.CTkLabel(
         card,
         text=saludo,
         text_color=TEXT,
-        font=ctk.CTkFont("Segoe UI", font_saludo)
+        font=ctk.CTkFont("Segoe UI Semibold", font_saludo, "bold")
     ).pack(pady=(0, pad_between))
 
     # Chip de versión

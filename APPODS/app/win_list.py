@@ -93,7 +93,7 @@ def open_win_list(parent: ctk.CTk):
 
     ctk.CTkLabel(
         card,
-        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (Gemini → OpenAI → local) y se guarda en data/gastos.csv. Puedes editar categoría, descripción y monto desde la lista.",
+        text="Ingresa la descripción y el monto. La categoría se clasifica automáticamente (IA). Puedes editar categoría, descripción y monto desde la lista.",
         text_color=TEXT_MUTED, font=ctk.CTkFont("Segoe UI", font_lbl)
     ).grid(row=1, column=0, columnspan=4, sticky="w", padx=pad_card)
 

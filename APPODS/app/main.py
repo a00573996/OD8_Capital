@@ -10,9 +10,9 @@ from app.win_home import open_win_home      # 👤 Perfil de usuario
 from app.win_form import open_win_form      # 💵 Ingresos
 from app.win_list import open_win_list      # 🧾 Registro de gastos
 from app.win_table import open_win_table    # 📊 Reporte de gastos
-from core.profile import load_profile       # <<— para leer el nombre del usuario
+from core.profile import load_profile       # para leer el nombre del usuario
 
-APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
+APP_TITLE   = "ZAVE MENU"
 APP_VERSION = "v0.1"
 
 # Paleta / constantes
@@ -35,11 +35,11 @@ def _init_theme():
     ctk.set_default_color_theme("green")
 
 def _load_logo_image(root, size_px=64):
-    """Carga el logo ZAVE desde assets/ZAVE LOGO.png y guarda la ref en root para evitar GC."""
+    """Carga el logo ZAVE y guarda la referencia en root para evitar GC."""
     try:
         img = Image.open(LOGO_PATH)
         ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size_px, size_px))
-        root._zave_logo_img = ctk_img  # <- mantener referencia viva
+        root._zave_logo_img = ctk_img  # mantener referencia viva
         return ctk_img
     except Exception:
         return None
@@ -59,6 +59,29 @@ def _nav_button(parent, text, command, *, radius, font_btn, btn_h, btn_w):
         height=btn_h,
         width=btn_w
     )
+
+def _force_maximize(win: ctk.CTk):
+    """Maximiza de forma robusta (Windows/Linux/macOS) incluso si el primer intento no hace efecto."""
+    win.update_idletasks()
+
+    def _zoom():
+        try:
+            win.state("zoomed")          # Windows / la mayoría de entornos
+            return
+        except Exception:
+            pass
+        try:
+            win.wm_attributes("-zoomed", True)  # algunos X11
+            return
+        except Exception:
+            pass
+        # Fallback: ocupar toda la pantalla
+        sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
+        win.geometry(f"{sw}x{sh}+0+0")
+
+    _zoom()
+    win.after(50, _zoom)
+    win.after(250, _zoom)
 
 def go_to(open_window_fn, current_root: ctk.CTk):
     """Cierra Main y abre SOLO la ventana destino."""
@@ -89,18 +112,15 @@ def main():
 
     root = ctk.CTk()
     root.title(APP_TITLE)
-    try:
-        root.state("zoomed")
-    except Exception:
-        root.geometry("1280x800")
+    _force_maximize(root)  # <<— maximiza al abrir
 
-    # Leer nombre del usuario
+    # Leer nombre del usuario para el saludo
     try:
         state = load_profile()
         nombre = (state.get("usuario", {}).get("nombre", "") or "").strip()
     except Exception:
         nombre = ""
-    saludo = f"Hola {nombre}" if nombre else "Hola"
+    saludo = f"¡Hola {nombre}!" if nombre else "¡Hola!"
 
     # Escalado
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
@@ -169,7 +189,7 @@ def main():
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .pack(fill="x", padx=pad_sep_x, pady=(pad_between * 2, pad_after_sep))
 
-    # Botones (⭐ Recomendaciones primero)
+    # Botones
     _nav_button(card, "⭐\u2003Recomendaciones",
                 lambda: go_to(open_win_reco, root),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
@@ -205,13 +225,6 @@ def main():
         height=btn_h,
         width=btn_w
     ).pack(pady=(pad_between, pad_top_title))
-
-    ctk.CTkLabel(
-        outer,
-        text="ZAVE — (ODS 8)",
-        text_color=TEXT_MUTED,
-        font=ctk.CTkFont("Segoe UI", font_footer)
-    ).pack(pady=(pad_footer, 0))
 
     root.mainloop()
 

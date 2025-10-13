@@ -90,9 +90,7 @@ def run_splash_then(callback, duration_ms: int = 1000):
     lbl_logo.pack(pady=(8, 0))
 
     lbl_title = tk.Label(body, text="ZAVE", font=("Segoe UI Semibold", 22), fg=TEXT, bg=BG)
-    lbl_sub   = tk.Label(body, text="Finanzas personales (ODS 8)", font=("Segoe UI", 11), fg=TEXT_MUTED, bg=BG)
     lbl_title.pack(pady=(10, 2))
-    lbl_sub.pack(pady=(0, 14))
 
     # ProgressBar de CustomTkinter dentro de un frame CTk
     pb_wrap = ctk.CTkFrame(body, fg_color=BG)

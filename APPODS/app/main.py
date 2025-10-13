@@ -1,5 +1,4 @@
-# main.py — ZAVE (Inicio con logo persistente, botón Recomendaciones primero,
-# y navegación que cierra Main y abre solo la ventana destino)
+# app/main.py — ZAVE (Inicio con saludo, logo persistente y navegación)
 from __future__ import annotations
 import customtkinter as ctk
 import tkinter as tk
@@ -11,6 +10,7 @@ from app.win_home import open_win_home      # 👤 Perfil de usuario
 from app.win_form import open_win_form      # 💵 Ingresos
 from app.win_list import open_win_list      # 🧾 Registro de gastos
 from app.win_table import open_win_table    # 📊 Reporte de gastos
+from core.profile import load_profile       # <<— para leer el nombre del usuario
 
 APP_TITLE   = "ZAVE — Finanzas Personales (ODS 8)"
 APP_VERSION = "v0.1"
@@ -35,10 +35,7 @@ def _init_theme():
     ctk.set_default_color_theme("green")
 
 def _load_logo_image(root, size_px=64):
-    """
-    Carga el logo ZAVE desde assets/zave_logo_512.png.
-    Muy importante: se guarda la referencia en root para que no la recolecte el GC.
-    """
+    """Carga el logo ZAVE desde assets/ZAVE LOGO.png y guarda la ref en root para evitar GC."""
     try:
         img = Image.open(LOGO_PATH)
         ctk_img = ctk.CTkImage(light_image=img, dark_image=img, size=(size_px, size_px))
@@ -70,13 +67,11 @@ def go_to(open_window_fn, current_root: ctk.CTk):
     - Crea un nuevo root oculto y abre la ventana destino (Toplevel)
     - Al cerrar la ventana destino, destruye el nuevo root
     """
-    # 1) Cerrar Main
     try:
         current_root.destroy()
     except Exception:
         pass
 
-    # 2) Nuevo root oculto
     new_root = ctk.CTk()
     new_root.withdraw()
     try:
@@ -84,17 +79,14 @@ def go_to(open_window_fn, current_root: ctk.CTk):
     except Exception:
         new_root.geometry("1280x800")
 
-    # 3) Crear la ventana destino (Toplevel)
     open_window_fn(new_root)
 
-    # 4) Enlazar cierre del/los Toplevel(s) para terminar la app
     def _bind_close_for_children():
         for w in new_root.winfo_children():
             if isinstance(w, (ctk.CTkToplevel, tk.Toplevel)):
                 w.protocol("WM_DELETE_WINDOW", new_root.destroy)
     new_root.after(50, _bind_close_for_children)
 
-    # 5) Event loop
     new_root.mainloop()
 
 def main():
@@ -107,6 +99,14 @@ def main():
     except Exception:
         root.geometry("1280x800")
 
+    # Leer nombre del usuario
+    try:
+        state = load_profile()
+        nombre = (state.get("usuario", {}).get("nombre", "") or "").strip()
+    except Exception:
+        nombre = ""
+    saludo = f"Hola {nombre}" if nombre else "Hola"
+
     # Escalado
     sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
     scale  = min(sw/1920, sh/1080)
@@ -116,6 +116,7 @@ def main():
     font_chip     = max(10, int(13 * scale))
     font_btn      = max(10, int(16 * scale))
     font_footer   = max(9,  int(12 * scale))
+    font_saludo   = max(12, int(18 * scale))
     btn_h         = max(36, int(46 * scale))
     btn_w         = max(280, int(380 * scale))
     pad_outer     = max(20, int(40 * scale))
@@ -144,12 +145,19 @@ def main():
             font=ctk.CTkFont("Segoe UI Semibold", font_title)
         ).pack(pady=(pad_top_title, pad_between))
     else:
-        # Fallback emoji si no hay imagen
         ctk.CTkLabel(
             card, text="💰\u2003ZAVE",
             text_color=TEXT,
             font=ctk.CTkFont("Segoe UI Semibold", font_title)
         ).pack(pady=(pad_top_title, pad_between))
+
+    # Saludo personalizado
+    ctk.CTkLabel(
+        card,
+        text=saludo,
+        text_color=TEXT,
+        font=ctk.CTkFont("Segoe UI", font_saludo)
+    ).pack(pady=(0, pad_between))
 
     # Chip de versión
     ctk.CTkLabel(
@@ -166,8 +174,7 @@ def main():
     ctk.CTkFrame(card, fg_color=SEPARATOR, height=2)\
         .pack(fill="x", padx=pad_sep_x, pady=(pad_between * 2, pad_after_sep))
 
-    # Botones -> usan go_to(...) para cerrar Main y abrir la ventana
-    # ⭐ Recomendaciones primero
+    # Botones (⭐ Recomendaciones primero)
     _nav_button(card, "⭐\u2003Recomendaciones",
                 lambda: go_to(open_win_reco, root),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)

@@ -4,7 +4,7 @@
     "edad": 18,
     "genero": "M",
     "ubicacion": {
-      "pais": "1",
+      "pais": "México",
       "ciudad": "Leon"
     },
     "email": "David@example.com"
@@ -24,11 +24,11 @@
     "dependientes": 1,
     "vivienda": {
       "tipo": "Renta",
-      "gasto_mensual": 0.0
+      "gasto_mensual": 10000.0
     },
     "transporte": "Auto",
     "mascotas": {
-      "tiene": true,
+      "tiene": false,
       "tipo": "1"
     },
     "gasto_fijo_mensual": 40000.0,
@@ -37,19 +37,19 @@
       "tipos": [
         "Varias"
       ],
-      "pago_mensual_total": 10.0
+      "pago_mensual_total": 1000.0
     },
     "habitos": {
-      "comer_fuera": 1,
-      "cafe_fuera": 1,
-      "compras_online": 1
+      "comer_fuera": 2,
+      "cafe_fuera": 3,
+      "compras_online": 2
     }
   },
   "metas": {
     "principal": "Inversión",
-    "monto_objetivo": 100.0,
-    "horizonte_meses": 1,
-    "aportacion_mensual": 0.0,
+    "monto_objetivo": 1200.0,
+    "horizonte_meses": 12,
+    "aportacion_mensual": 1000.0,
     "fondo_emergencia_meses": 3
   },
   "preferencias": {
@@ -63,7 +63,7 @@
     },
     "consentimiento_datos_locales": true
   },
-  "ultima_actualizacion": "2025-10-13T07:19:47",
+  "ultima_actualizacion": "2025-10-13T08:10:31",
   "totales": {
     "ingreso_total_estimado": 100100.0
   },
@@ -74,16 +74,16 @@
       "ingreso_fijo": 100000.0,
       "ingreso_variables": 100.0,
       "volatilidad_ingreso": 0.001,
-      "carga_vivienda": 0.0,
-      "carga_deuda": 0.0001,
+      "carga_vivienda": 0.0999,
+      "carga_deuda": 0.01,
       "carga_fijos": 0.3996,
-      "capacidad_ahorro_pct": 0.6003,
-      "capacidad_ahorro_mxn": 60090.0,
-      "IGD": 20.0,
-      "meta_objetivo": 100.0,
-      "meta_meses": 1,
-      "aportacion_mensual": 0.0,
-      "ratio_aporte": 0.0
+      "capacidad_ahorro_pct": 0.4905,
+      "capacidad_ahorro_mxn": 49100.0,
+      "IGD": 46.7,
+      "meta_objetivo": 1200.0,
+      "meta_meses": 12,
+      "aportacion_mensual": 1000.0,
+      "ratio_aporte": 10.0
     },
     "labels": {
       "segmento_ingreso": "Alto",
@@ -92,12 +92,14 @@
       "carga_deuda": "Baja",
       "carga_fijos": "Pesada",
       "capacidad_ahorro": "Muy buena",
-      "aporte_meta": "Aporte insuficiente"
+      "aporte_meta": "Sobre-meta"
     },
     "perfil_consumo": {
-      "IGD": 20.0,
-      "nivel": "Bajo",
-      "tags": []
+      "IGD": 46.7,
+      "nivel": "Medio",
+      "tags": [
+        "Café lover"
+      ]
     },
     "etapa_vida": {
       "ocupacion": "Estudiante",
@@ -105,12 +107,12 @@
     },
     "vivienda": "Renta",
     "movilidad": "Auto",
-    "mascotas": "Sí",
+    "mascotas": "No",
     "metas": {
       "principal": "Inversión",
-      "aporte_label": "Aporte insuficiente"
+      "aporte_label": "Sobre-meta"
     },
-    "persona": "Ingreso alto, vivienda baja, deuda baja, discrecional bajo, con dependientes",
+    "persona": "Ingreso alto, vivienda baja, deuda baja, discrecional medio, con dependientes",
     "prioridades": [
       "Fondo de emergencia 3–6 meses"
     ]

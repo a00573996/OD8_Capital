@@ -155,14 +155,14 @@ Presiona F5 o el botón Run (▶).
 
 Se mostrará primero el splash con la barra de carga y, después, el menú principal (main.py) con navegación a todas las ventanas.
 
-Flujo sugerido para demo:
+### Flujo sugerido para demo
 - Perfil de Usuario → completa nombre / edad / ciudad / hábitos.
 - Ingresos → registra ingreso fijo y variables.
 - Registro de Gastos → agrega ejemplos y prueba la clasificación automática.
 - Reporte → consulta tabla, totales y gráfica.
 - Recomendaciones → revisa plan de acción y Exportar (MD / HTML / PDF).
 
-🪟 Ventanas del sistema
+### 🪟 Ventanas del sistema
 
 | Módulo       | Ventana            | Función clave                                                                 |
 |--------------|--------------------|-------------------------------------------------------------------------------|
@@ -174,20 +174,20 @@ Flujo sugerido para demo:
 | main.py      | Inicio             | Menú principal, logo, saludo personalizado y navegación.                     |
 | splash.py    | Splash             | Pantalla de carga inicial con barra de progreso.                             |
 
-Exportar a Hojas de cálculo
+### Exportar a hojas de cálculo
 
-🤖 Clasificación automática de gastos (IA)
+### 🤖 Clasificación automática de gastos (IA)
 
 El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.
 
-Orden de intentos:
-1. Gemini (google-genai): usa un enum de categorías soportadas y aplica un subset por dominio detectado (mejora precisión y reduce alucinaciones).
-2. OpenAI (openai): devuelve categoría + confianza. Si la confianza es baja, se enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y se reintenta.
-3. Local (fallback): mapeo por palabras clave definidas en data/categorias.json → keymap.
+**Orden de intentos:**
+1. **Gemini (google-genai):** usa un enum de categorías soportadas y aplica un subset por dominio detectado (mejora precisión y reduce alucinaciones).
+2. **OpenAI (openai):** devuelve categoría + confianza. Si la confianza es baja, se enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y se reintenta.
+3. **Local (fallback):** mapeo por palabras clave definidas en data/categorias.json → keymap.
 
 Tip: ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
 
-🧩 Recomendaciones personalizadas
+### 🧩 Recomendaciones personalizadas
 
 Las recomendaciones se basan en un análisis de la situación financiera del usuario; calculan métricas clave como:
 - Ingreso total mensual y capacidad de ahorro (MXN y %).
@@ -196,14 +196,14 @@ Las recomendaciones se basan en un análisis de la situación financiera del usu
 - Top de categorías de gasto (extraídas de gastos.csv).
 - Metas del usuario (objetivo, horizonte, aportación).
 
-Horizontes de acción:
-- Corto (0–30 días): quick wins y contención de fugas de dinero.
-- Mediano (1–6 meses): creación de fondo de emergencia y ajustes estructurales.
-- Largo (6–24 meses): automatización de inversión, consolidación de deudas y optimización fiscal.
+**Horizontes de acción:**
+- **Corto (0–30 días):** quick wins y contención de fugas de dinero.
+- **Mediano (1–6 meses):** creación de fondo de emergencia y ajustes estructurales.
+- **Largo (6–24 meses):** automatización de inversión, consolidación de deudas y optimización fiscal.
 
 Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
-🧪 Solución de problemas
+### 🧪 Solución de problemas
 
 | Problema                                 | Posible causa y solución                                                                 |
 |------------------------------------------|------------------------------------------------------------------------------------------|
@@ -212,9 +212,9 @@ Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 | Gemini/OpenAI error 401/429.             | Error de autenticación o cuota. Revisa .env y las variables de entorno. Fallback local.  |
 | Tk no disponible (macOS).                | Instala Tk para Python (ej.: brew install python-tk o según tu gestor de paquetes).     |
 
-Exportar a Hojas de cálculo
+### Exportar a hojas de cálculo
 
-👥 Equipo
+### 👥 Equipo
 - Profesor Camilo Duque — Código base, arquitectura y revisión final.
 - Alfredo de Alba Ulloa
 - Daniel Santino Alejandri Cure

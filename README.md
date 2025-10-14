@@ -1,4 +1,3 @@
-
 # ZAVE — Finanzas Personales (ODS 8) 💰
 
 **ZAVE** es una aplicación de escritorio desarrollada en **Python** (Tkinter/CustomTkinter) diseñada para ayudar a las personas en México a comprender y mejorar su situación financiera personal. El proyecto está firmemente alineado con el **Objetivo de Desarrollo Sostenible (ODS) 8: Trabajo decente y crecimiento económico**.
@@ -54,38 +53,32 @@ El proyecto está construido sobre un stack moderno y modular:
 ---
 
 ## 📁 Estructura del proyecto
-
-```
-
 APPODS/
 ├── app/
-│   ├── start.py        \# Punto de entrada (muestra splash y luego main)
-│   ├── main.py         \# Menú principal
-│   ├── splash.py       \# Pantalla de carga con progreso
-│   ├── win\_home.py     \# Ventana: Perfil de usuario
-│   ├── win\_form.py     \# Ventana: Ingresos
-│   ├── win\_list.py     \# Ventana: Registro de gastos (IA/CSV/edición)
-│   ├── win\_table.py    \# Ventana: Reporte (tabla+gráfica)
-│   └── win\_reco.py     \# Ventana: Recomendaciones + Exportar
+│   ├── start.py        # Punto de entrada (muestra splash y luego main)
+│   ├── main.py         # Menú principal
+│   ├── splash.py       # Pantalla de carga con progreso
+│   ├── win_home.py     # Ventana: Perfil de usuario
+│   ├── win_form.py     # Ventana: Ingresos
+│   ├── win_list.py     # Ventana: Registro de gastos (IA/CSV/edición)
+│   ├── win_table.py    # Ventana: Reporte (tabla+gráfica)
+│   └── win_reco.py     # Ventana: Recomendaciones + Exportar
 ├── core/
-│   ├── profile.py      \# Load/save profile.json y utilidades
-│   ├── storage.py      \# Manejo de gastos.csv (append/load/save)
-│   ├── ai.py           \# Pipeline OpenAI
-│   ├── ai\_gemini.py    \# Pipeline Gemini
-│   ├── classifier.py   \# Reglas para clasificar usuario y métricas
-│   └── paths.py        \# Helpers de rutas (assets/data)
+│   ├── profile.py      # Load/save profile.json y utilidades
+│   ├── storage.py      # Manejo de gastos.csv (append/load/save)
+│   ├── ai.py           # Pipeline OpenAI
+│   ├── ai_gemini.py    # Pipeline Gemini
+│   ├── classifier.py   # Reglas para clasificar usuario y métricas
+│   └── paths.py        # Helpers de rutas (assets/data)
 ├── assets/
-│   └── ZAVE LOGO.png   \# Logo (usado por splash y main)
+│   └── ZAVE LOGO.png   # Logo (usado por splash y main)
 ├── data/
-│   ├── categorias.json \# Categorías soportadas + keymap local
-│   ├── gastos.csv      \# Generado y actualizado por la app
-│   └── profile.json    \# Generado y actualizado por la app
-├── .env                \# (Opcional) API keys
+│   ├── categorias.json # Categorías soportadas + keymap local
+│   ├── gastos.csv      # Generado y actualizado por la app
+│   └── profile.json    # Generado y actualizado por la app
+├── .env                # (Opcional) API keys
 ├── requirements.txt
 └── README.md
-
-````
-
 > **Nota**: Puedes renombrar la carpeta raíz del proyecto (`APPODS`) sin cambiar código. Si lo haces, recuerda volver a seleccionar el intérprete de `.venv` en VS Code y ejecutar la aplicación desde la nueva carpeta del proyecto.
 
 ---
@@ -94,7 +87,7 @@ APPODS/
 
 Sigue estos pasos para configurar y activar el entorno virtual e instalar las dependencias:
 
-1.  **Crear entorno virtual**
+1. **Crear entorno virtual**
 
     **Windows (PowerShell)**
     ```powershell
@@ -112,7 +105,7 @@ Sigue estos pasos para configurar y activar el entorno virtual e instalar las de
     python -m pip install --upgrade pip
     ```
 
-2.  **Instalar dependencias**
+2. **Instalar dependencias**
 
     Con el entorno virtual activado, ejecuta:
     ```bash
@@ -124,25 +117,22 @@ Sigue estos pasos para configurar y activar el entorno virtual e instalar las de
 ## 🔐 Configuración de API keys (.env)
 
 Para usar la clasificación automática de gastos con Gemini u OpenAI, crea un archivo llamado **`.env`** en la raíz del proyecto (`APPODS/`) y añade tus claves:
+OPENAI_API_KEY=tu_clave_openai
+GEMINI_API_KEY=tu_clave_gemini
 
-````
-
-OPENAI\_API\_KEY=tu\_clave\_openai
-GEMINI\_API\_KEY=tu\_clave\_gemini
-
-````
 
 > Si no configuras ninguna clave, el sistema usará un clasificador local de *fallback* basado en palabras clave.
 
 ---
+
 ## ▶️ Ejecución desde VS Code (Run and Debug) 🚀
 
 Para ejecutar y depurar la aplicación usando la configuración predefinida de VS Code:
 
-1.  Abre la carpeta del proyecto (`APPODS/`) en VS Code.
-2.  **Activa el entorno virtual** `.venv` si no lo está.
-3.  Abre la vista **Run and Debug** ($\text{Ctrl} + \text{Shift} + \text{D}$ o desde el panel lateral).
-4.  Selecciona la configuración:
+1. Abre la carpeta del proyecto (`APPODS/`) en VS Code.
+2. **Activa el entorno virtual** `.venv` si no lo está.
+3. Abre la vista **Run and Debug** ($\text{Ctrl} + \text{Shift} + \text{D}$ o desde el panel lateral).
+4. Selecciona la configuración:
     
     ▶️ **Ejecutar ZAVE (splash+main)**
 
@@ -162,74 +152,82 @@ Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bl
 Presiona F5 o el botón Run (▶).
 
 Se mostrará primero el splash con la barra de carga, y después, el menú principal (main.py) con navegación a todas las ventanas.
------
 
-## 🪟 Ventanas del sistema
+Flujo sugerido para demo:
+Perfil de Usuario → completa nombre/edad/ciudad/hábitos.
 
-| Módulo | Ventana | Función clave |
-| :--- | :--- | :--- |
-| `win_home.py` | Perfil de usuario | Recolección de datos personales, situación, hábitos, metas y preferencias. |
-| `win_form.py` | Ingresos | Registro de ingreso fijo y variables, cálculo del total estimado. |
-| `win_list.py` | Registro de gastos | Alta de gastos con IA (Gemini→OpenAI→local), edición y borrado persistente (CSV). |
-| `win_table.py` | Reporte | Visualización de tabla con acumulados, totales por categoría y gráfica. |
-| `win_reco.py` | Recomendaciones | Generación del plan corto/mediano/largo según métricas y top gastos. Exportación. |
-| `main.py` | Inicio | Menú principal, logo, saludo personalizado y navegación. |
-| `splash.py` | Splash | Pantalla de carga inicial con barra de progreso. |
+Ingresos → registra ingreso fijo y variables.
 
------
+Registro de Gastos → agrega ejemplos, prueba la clasificación automática.
 
-## 🤖 Clasificación automática de gastos (IA)
+Reporte → consulta tabla, totales y gráfica.
 
-El sistema intenta clasificar el gasto en un *pipeline* de tres niveles para maximizar precisión y resiliencia:
+Recomendaciones → revisa plan de acción y Exportar (MD/HTML/PDF).
 
-### Orden de intentos:
+🪟 Ventanas del sistema
+Módulo	Ventana	Función clave
+win_home.py	Perfil de usuario	Recolección de datos personales, situación, hábitos, metas y preferencias.
+win_form.py	Ingresos	Registro de ingreso fijo y variables, cálculo del total estimado.
+win_list.py	Registro de gastos	Alta de gastos con IA (Gemini→OpenAI→local), edición y borrado persistente (CSV).
+win_table.py	Reporte	Visualización de tabla con acumulados, totales por categoría y gráfica.
+win_reco.py	Recomendaciones	Generación del plan corto/mediano/largo según métricas y top gastos. Exportación.
+main.py	Inicio	Menú principal, logo, saludo personalizado y navegación.
+splash.py	Splash	Pantalla de carga inicial con barra de progreso.
 
-1.  **Gemini (`google-genai`)**: Usa un **enum** de categorías soportadas y aplica un **subset** por dominio detectado. Esto mejora la precisión al limitar las opciones y reducir las alucinaciones.
-2.  **OpenAI (`openai`)**: Devuelve categoría + confianza. Si la confianza es baja, el sistema enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y reintenta.
-3.  **Local (*Fallback*)**: Se aplica un mapeo por palabras clave definidas en `data/categorias.json` → `keymap`.
+Exportar a Hojas de cálculo
+🤖 Clasificación automática de gastos (IA)
+El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia:
 
-> **Tip**: Ajusta `data/categorias.json` para personalizar las categorías y el `keymap` local. Si recibes errores de cuota (`429`) en las APIs (OpenAI o Gemini), el sistema automáticamente usará el clasificador local.
+Orden de intentos:
+Gemini (google-genai): Usa un enum de categorías soportadas y aplica un subset por dominio detectado. Esto mejora la precisión al limitar las opciones y reducir las alucinaciones.
 
------
+OpenAI (openai): Devuelve categoría + confianza. Si la confianza es baja, el sistema enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y reintenta.
 
-## 🧩 Recomendaciones personalizadas
+Local (Fallback): Se aplica un mapeo por palabras clave definidas en data/categorias.json → keymap.
 
+Tip: Ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs (OpenAI o Gemini), el sistema automáticamente usará el clasificador local.
+
+🧩 Recomendaciones personalizadas
 Las recomendaciones se basan en un análisis profundo de la situación financiera del usuario, calculando métricas clave:
 
-  * **Ingreso total mensual** y **capacidad de ahorro** (en MXN y %).
-  * **Cargas** fijas: vivienda, deudas y gastos fijos esenciales.
-  * **IGD** (Índice de Gasto Discrecional).
-  * **Top de categorías de gasto** (extraídas de `gastos.csv`).
-  * **Metas del usuario** (objetivo, horizonte, aportación).
+Ingreso total mensual y capacidad de ahorro (en MXN y %).
+
+Cargas fijas: vivienda, deudas y gastos fijos esenciales.
+
+IGD (Índice de Gasto Discrecional).
+
+Top de categorías de gasto (extraídas de gastos.csv).
+
+Metas del usuario (objetivo, horizonte, aportación).
 
 Se estructuran en tres horizontes de acción:
 
-  * **Corto (0–30 días)**: Enfocado en *quick wins* y contención de fugas de dinero.
-  * **Mediano (1–6 meses)**: Creación de fondo de emergencia; ajustes estructurales de vivienda/fijos.
-  * **Largo (6–24 meses)**: Automatización de inversión; consolidación de deudas; optimización fiscal.
+Corto (0–30 días): Enfocado en quick wins y contención de fugas de dinero.
 
-Las recomendaciones son exportables a **Markdown, HTML o PDF** (usando ReportLab).
+Mediano (1–6 meses): Creación de fondo de emergencia; ajustes estructurales de vivienda/fijos.
 
------
+Largo (6–24 meses): Automatización de inversión; consolidación de deudas; optimización fiscal.
 
-## 🧪 Solución de problemas
+Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
-| Problema | Posible causa y solución |
-| :--- | :--- |
-| La ventana principal no maximiza. | En Windows/Linux se usa `root.state("zoomed")`. En macOS se intenta aplicar `geometry` a pantalla completa si *zoomed* no está disponible. |
-| Logo no visible. | Verifica que el archivo `assets/ZAVE LOGO.png` exista y que tengas permisos de lectura. |
-| Gemini/OpenAI error 401/429. | Error de autenticación o cuota. Revisa el archivo `.env`, las variables de entorno y tu plan de uso. El sistema caerá al clasificador local como *fallback*. |
-| Tk no disponible (macOS). | Instala Tk junto a tu distribución de Python (por ejemplo, `brew install python-tk`, según tu gestor de paquetes). |
+🧪 Solución de problemas
+Problema	Posible causa y solución
+La ventana principal no maximiza.	En Windows/Linux se usa root.state("zoomed"). En macOS se intenta aplicar geometry a pantalla completa si zoomed no está disponible.
+Logo no visible.	Verifica que el archivo assets/ZAVE LOGO.png exista y que tengas permisos de lectura.
+Gemini/OpenAI error 401/429.	Error de autenticación o cuota. Revisa el archivo .env, las variables de entorno y tu plan de uso. El sistema caerá al clasificador local como fallback.
+Tk no disponible (macOS).	Instala Tk junto a tu distribución de Python (por ejemplo, brew install python-tk, según tu gestor de paquetes).
 
------
+Exportar a Hojas de cálculo
+👥 Equipo
+Profesor Camilo Duque — Código base, arquitectura y revisión final.
 
-## 👥 Equipo
+[Alfredo de Alba Ulloa]
 
-  * **Profesor Camilo Duque**.
-  * [Alfredo de ALba Ulloa] — 
-  * [Daniel Santino Alejandri Cure] — 
-  * [David Alejandro Flores Cruz] — 
-  * [¿Juan Pablo Padilla Ramirez] — 
-  * [Rodrigo Otero Juárez] — 
------
-```
+[Daniel Santino Alejandri Cure]
+
+[David Alejandro Flores Cruz]
+
+[Juan Pablo Padilla Ramirez]
+
+[Rodrigo Otero Juárez]
+

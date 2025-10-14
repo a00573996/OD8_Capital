@@ -135,35 +135,33 @@ GEMINI\_API\_KEY=tu\_clave\_gemini
 > Si no configuras ninguna clave, el sistema usará un clasificador local de *fallback* basado en palabras clave.
 
 ---
+## ▶️ Ejecución desde VS Code (Run and Debug) 🚀
 
-## ▶️ Ejecución
+Para ejecutar y depurar la aplicación usando la configuración predefinida de VS Code:
 
-Asegúrate de tener el entorno virtual activado (`source .venv/bin/activate` o similar).
+1.  Abre la carpeta del proyecto (`APPODS/`) en VS Code.
+2.  **Activa el entorno virtual** `.venv` si no lo está.
+3.  Abre la vista **Run and Debug** ($\text{Ctrl} + \text{Shift} + \text{D}$ o desde el panel lateral).
+4.  Selecciona la configuración:
+    
+    ▶️ **Ejecutar ZAVE (splash+main)**
 
-### Opción 1: Ejecución directa (Recomendada)
+Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bloque:
 
-Ejecuta el punto de entrada de la aplicación desde la carpeta raíz (`APPODS/`):
+```json
+{
+  "name": "Ejecutar ZAVE (splash+main)",
+  "type": "debugpy",
+  "request": "launch",
+  "module": "app.start",
+  "console": "integratedTerminal",
+  "justMyCode": true,
+  "cwd": "${workspaceFolder}/APPODS",
+  "python": "${command:python.interpreterPath}"
+}
+Presiona F5 o el botón Run (▶).
 
-```bash
-python -m app.start
-````
-
-### Opción 2: Ejecutar y depurar en VS Code
-
-Si usas Visual Studio Code, puedes ejecutar el flujo de inicio con la configuración de depuración:
-
-1.  Abre la pestaña **"Run and Debug"** (Ejecutar y Depurar).
-2.  Selecciona la configuración: **`Ejecutar ZAVE (splash+main)`**.
-3.  Presiona el botón de **Inicio** (triángulo verde).
-
-### Flujo sugerido para demo:
-
-1.  **Perfil de Usuario** $\to$ completa nombre/edad/ciudad/hábitos.
-2.  **Ingresos** $\to$ registra ingreso fijo y variables.
-3.  **Registro de Gastos** $\to$ agrega ejemplos, prueba la clasificación automática.
-4.  **Reporte** $\to$ consulta tabla, totales y gráfica.
-5.  **Recomendaciones** $\to$ revisa plan de acción y **Exportar** (MD/HTML/PDF).
-
+Se mostrará primero el splash con la barra de carga, y después, el menú principal (main.py) con navegación a todas las ventanas.
 -----
 
 ## 🪟 Ventanas del sistema

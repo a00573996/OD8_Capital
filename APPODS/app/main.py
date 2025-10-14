@@ -1,4 +1,4 @@
-# app/main.py — ZAVE (Inicio con saludo en negrita, logo persistente y navegación)
+# app/main.py — ZAVE-MENU INICIO
 from __future__ import annotations
 import customtkinter as ctk
 import tkinter as tk

@@ -161,7 +161,7 @@ Flujo sugerido para demo:
 - Registro de Gastos → agrega ejemplos y prueba la clasificación automática.
 - Reporte → consulta tabla, totales y gráfica.
 - Recomendaciones → revisa plan de acción y Exportar (MD / HTML / PDF).
-
+```
 ##🪟 Ventanas del sistema
 
 | Módulo       | Ventana            | Función clave                                                                 |
@@ -174,8 +174,7 @@ Flujo sugerido para demo:
 | main.py      | Inicio             | Menú principal, logo, saludo personalizado y navegación.                     |
 | splash.py    | Splash             | Pantalla de carga inicial con barra de progreso.                             |
 
-Exportar a Hojas de cálculo
-
+```
 ##🤖 Clasificación automática de gastos (IA)
 
 El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.

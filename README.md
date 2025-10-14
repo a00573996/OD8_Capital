@@ -161,8 +161,13 @@ Se mostrará primero el splash con la barra de carga y, después, el menú princ
 - Registro de Gastos → agrega ejemplos y prueba la clasificación automática.
 - Reporte → consulta tabla, totales y gráfica.
 - Recomendaciones → revisa plan de acción y Exportar (MD / HTML / PDF).
+<<<<<<< HEAD
 
 ### 🪟 Ventanas del sistema
+=======
+```
+##🪟 Ventanas del sistema
+>>>>>>> 477c53f869cb6188f06780658cc63ace58ef4aae
 
 | Módulo       | Ventana            | Función clave                                                                 |
 |--------------|--------------------|-------------------------------------------------------------------------------|
@@ -174,9 +179,14 @@ Se mostrará primero el splash con la barra de carga y, después, el menú princ
 | main.py      | Inicio             | Menú principal, logo, saludo personalizado y navegación.                     |
 | splash.py    | Splash             | Pantalla de carga inicial con barra de progreso.                             |
 
+<<<<<<< HEAD
 ### Exportar a hojas de cálculo
 
 ### 🤖 Clasificación automática de gastos (IA)
+=======
+```
+##🤖 Clasificación automática de gastos (IA)
+>>>>>>> 477c53f869cb6188f06780658cc63ace58ef4aae
 
 El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.
 
@@ -187,7 +197,11 @@ El sistema intenta clasificar el gasto en un pipeline de tres niveles para maxim
 
 Tip: ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
 
+<<<<<<< HEAD
 ### 🧩 Recomendaciones personalizadas
+=======
+##🧩 Recomendaciones personalizadas
+>>>>>>> 477c53f869cb6188f06780658cc63ace58ef4aae
 
 Las recomendaciones se basan en un análisis de la situación financiera del usuario; calculan métricas clave como:
 - Ingreso total mensual y capacidad de ahorro (MXN y %).
@@ -203,7 +217,11 @@ Las recomendaciones se basan en un análisis de la situación financiera del usu
 
 Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
+<<<<<<< HEAD
 ### 🧪 Solución de problemas
+=======
+##🧪 Solución de problemas
+>>>>>>> 477c53f869cb6188f06780658cc63ace58ef4aae
 
 | Problema                                 | Posible causa y solución                                                                 |
 |------------------------------------------|------------------------------------------------------------------------------------------|
@@ -214,6 +232,7 @@ Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
 ### Exportar a hojas de cálculo
 
+<<<<<<< HEAD
 ### 👥 Equipo
 - Profesor Camilo Duque — Código base, arquitectura y revisión final.
 - Alfredo de Alba Ulloa
@@ -222,3 +241,17 @@ Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 - Juan Pablo Padilla Ramirez
 - Rodrigo Otero Juárez
 // ...existing code...
+=======
+##👥 Equipo
+Profesor Camilo Duque 
+
+[Alfredo de Alba Ulloa]
+
+[Daniel Santino Alejandri Cure]
+
+[David Alejandro Flores Cruz]
+
+[Juan Pablo Padilla Ramirez]
+
+[Rodrigo Otero Juárez]
+>>>>>>> 477c53f869cb6188f06780658cc63ace58ef4aae

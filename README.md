@@ -18,6 +18,7 @@ Ofrece un completo perfil de usuario, registro de ingresos y gastos, reporte fin
 
 ## 🧭 Contenidos
 
+- [Equipo](#-equipo)
 - [Características](#-características)
 - [Arquitectura y stack](#-arquitectura-y-stack)
 - [Estructura del proyecto](#-estructura-del-proyecto)
@@ -28,7 +29,6 @@ Ofrece un completo perfil de usuario, registro de ingresos y gastos, reporte fin
 - [Clasificación automática de gastos (IA)](#-clasificación-automática-de-gastos-ia)
 - [Recomendaciones personalizadas](#-recomendaciones-personalizadas)
 - [Solución de problemas](#-solución-de-problemas)
-- [Equipo](#-equipo)
 ---
 
 ## ✨ Características

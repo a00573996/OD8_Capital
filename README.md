@@ -113,17 +113,13 @@ Sigue estos pasos para configurar y activar el entorno virtual e instalar las de
     ```
 
 ---
+🔐 Configuración de API keys (.env)
+Para usar la clasificación automática de gastos con Gemini u OpenAI, crea un archivo llamado .env en la raíz del proyecto (APPODS/) y añade tus claves:
 
-## 🔐 Configuración de API keys (.env)
-
-Para usar la clasificación automática de gastos con Gemini u OpenAI, crea un archivo llamado **`.env`** en la raíz del proyecto (`APPODS/`) y añade tus claves:
 OPENAI_API_KEY=tu_clave_openai
 GEMINI_API_KEY=tu_clave_gemini
+Si no configuras ninguna clave, el sistema usará un clasificador local de fallback basado en palabras clave.
 
-
-> Si no configuras ninguna clave, el sistema usará un clasificador local de *fallback* basado en palabras clave.
-
----
 ▶️ Ejecución desde VS Code (Run and Debug) 🚀
 Para ejecutar y depurar la aplicación usando la configuración predefinida de VS Code:
 
@@ -233,4 +229,5 @@ Profesor Camilo Duque — Código base, arquitectura y revisión final.
 [Juan Pablo Padilla Ramirez]
 
 [Rodrigo Otero Juárez]
+
 

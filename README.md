@@ -162,7 +162,7 @@ Flujo sugerido para demo:
 - Reporte → consulta tabla, totales y gráfica.
 - Recomendaciones → revisa plan de acción y Exportar (MD / HTML / PDF).
 
-🪟 Ventanas del sistema
+##🪟 Ventanas del sistema
 
 | Módulo       | Ventana            | Función clave                                                                 |
 |--------------|--------------------|-------------------------------------------------------------------------------|
@@ -176,7 +176,7 @@ Flujo sugerido para demo:
 
 Exportar a Hojas de cálculo
 
-🤖 Clasificación automática de gastos (IA)
+##🤖 Clasificación automática de gastos (IA)
 
 El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.
 
@@ -187,7 +187,7 @@ Orden de intentos:
 
 Tip: ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
 
-🧩 Recomendaciones personalizadas
+##🧩 Recomendaciones personalizadas
 
 Las recomendaciones se basan en un análisis de la situación financiera del usuario; calculan métricas clave como:
 - Ingreso total mensual y capacidad de ahorro (MXN y %).
@@ -203,7 +203,7 @@ Horizontes de acción:
 
 Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
-🧪 Solución de problemas
+##🧪 Solución de problemas
 
 | Problema                                 | Posible causa y solución                                                                 |
 |------------------------------------------|------------------------------------------------------------------------------------------|
@@ -214,11 +214,15 @@ Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
 Exportar a Hojas de cálculo
 
-👥 Equipo
-- Profesor Camilo Duque — Código base, arquitectura y revisión final.
-- Alfredo de Alba Ulloa
-- Daniel Santino Alejandri Cure
-- David Alejandro Flores Cruz
-- Juan Pablo Padilla Ramirez
-- Rodrigo Otero Juárez
-// ...existing code...
+##👥 Equipo
+Profesor Camilo Duque 
+
+[Alfredo de Alba Ulloa]
+
+[Daniel Santino Alejandri Cure]
+
+[David Alejandro Flores Cruz]
+
+[Juan Pablo Padilla Ramirez]
+
+[Rodrigo Otero Juárez]

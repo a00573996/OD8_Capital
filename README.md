@@ -29,8 +29,6 @@ Ofrece un completo perfil de usuario, registro de ingresos y gastos, reporte fin
 - [Recomendaciones personalizadas](#-recomendaciones-personalizadas)
 - [Solución de problemas](#-solución-de-problemas)
 - [Equipo](#-equipo)
-- [Licencia](#-licencia)
-
 ---
 
 ## ✨ Características

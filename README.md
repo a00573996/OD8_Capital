@@ -227,19 +227,13 @@ Las recomendaciones son exportables a **Markdown, HTML o PDF** (usando ReportLab
 
 ## 👥 Equipo
 
-  * **Profesor Camilo Duque** — Código base, arquitectura y revisión final.
-  * [Nombre 1] — Recomendaciones (lógica/UX/exportación).
-  * [Nombre 2] — Perfil de usuario (validaciones/estado).
-  * [Nombre 3] — Ingresos (fijos/variables).
-  * [Nombre 4] — Registro de gastos (IA/CSV/edición).
-  * [Nombre 5] — Reporte (tabla, totales, gráfica).
-  * [Nombre 6] — Integración (splash, navegación, empaquetado).
-
+  * **Profesor Camilo Duque**.
+  * [Alfredo de ALba Ulloa] — 
+  * [Daniel Santino Alejandri Cure] — 
+  * [David Alejandro Flores Cruz] — 
+  * [¿Juan Pablo Padilla Ramirez] — 
+  * [Rodrigo Otero Juárez] — 
 -----
-
-## 📜 Licencia
-
-[Aquí puedes especificar la licencia, por ejemplo: **MIT** o **Apache 2.0**.]
 
 ```
 

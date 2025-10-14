@@ -1,5 +1,8 @@
 # app/main.py — ZAVE-MENU INICIO
 from __future__ import annotations
+
+_FIRST_LAUNCH_TIP_SHOWN = False
+
 import customtkinter as ctk
 import tkinter as tk
 from pathlib import Path
@@ -113,6 +116,15 @@ def main():
     root = ctk.CTk()
     root.title(APP_TITLE)
     _force_maximize(root)  # <<— maximiza al abrir
+    global _FIRST_LAUNCH_TIP_SHOWN
+    if not _FIRST_LAUNCH_TIP_SHOWN:
+    # Espera a que la UI pinte y lanza el mensaje
+        root.after(800, lambda: tk.messagebox.showinfo(
+            "Bienvenido a ZAVE",
+            "👋 Bienvenido a ZAVE\n\nPara comenzar, ve a «Perfil de Usuario» y completa tu información. "
+            "Así las recomendaciones serán más precisas."
+        ))
+        _FIRST_LAUNCH_TIP_SHOWN = True
 
     # Leer nombre del usuario para el saludo
     try:

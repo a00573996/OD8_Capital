@@ -149,6 +149,7 @@ Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bl
   "cwd": "${workspaceFolder}/APPODS",
   "python": "${command:python.interpreterPath}"
 }
+```
 Presiona F5 o el botón Run (▶).
 
 Se mostrará primero el splash con la barra de carga, y después, el menú principal (main.py) con navegación a todas las ventanas.

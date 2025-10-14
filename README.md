@@ -1,3 +1,12 @@
+## 👥 Equipo
+
+- **Profesor Camilo Duque** — Arquitectura y revisión final  
+- **Alfredo de Alba Ulloa**  
+- **Daniel Santino Alejandri Cure**  
+- **David Alejandro Flores Cruz**  
+- **Juan Pablo Padilla Ramírez**  
+- **Rodrigo Otero Juárez**
+ ---
 # 💰 ZAVE — Finanzas Personales (ODS 8)
 
 **ZAVE** es una aplicación de escritorio desarrollada en **Python** (Tkinter/CustomTkinter) diseñada para ayudar a las personas en México a comprender y mejorar su situación financiera personal.  
@@ -215,11 +224,4 @@ El sistema analiza métricas clave:
 
 ---
 
-## 👥 Equipo
 
-- **Profesor Camilo Duque** — Arquitectura y revisión final  
-- **Alfredo de Alba Ulloa**  
-- **Daniel Santino Alejandri Cure**  
-- **David Alejandro Flores Cruz**  
-- **Juan Pablo Padilla Ramírez**  
-- **Rodrigo Otero Juárez**

@@ -149,86 +149,76 @@ Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bl
   "cwd": "${workspaceFolder}/APPODS",
   "python": "${command:python.interpreterPath}"
 }
+
 ```
 Presiona F5 o el botón Run (▶).
 
-Se mostrará primero el splash con la barra de carga, y después, el menú principal (main.py) con navegación a todas las ventanas.
+Se mostrará primero el splash con la barra de carga y, después, el menú principal (main.py) con navegación a todas las ventanas.
 
 Flujo sugerido para demo:
-Perfil de Usuario → completa nombre/edad/ciudad/hábitos.
-
-Ingresos → registra ingreso fijo y variables.
-
-Registro de Gastos → agrega ejemplos, prueba la clasificación automática.
-
-Reporte → consulta tabla, totales y gráfica.
-
-Recomendaciones → revisa plan de acción y Exportar (MD/HTML/PDF).
+- Perfil de Usuario → completa nombre / edad / ciudad / hábitos.
+- Ingresos → registra ingreso fijo y variables.
+- Registro de Gastos → agrega ejemplos y prueba la clasificación automática.
+- Reporte → consulta tabla, totales y gráfica.
+- Recomendaciones → revisa plan de acción y Exportar (MD / HTML / PDF).
 
 🪟 Ventanas del sistema
-Módulo	Ventana	Función clave
-win_home.py	Perfil de usuario	Recolección de datos personales, situación, hábitos, metas y preferencias.
-win_form.py	Ingresos	Registro de ingreso fijo y variables, cálculo del total estimado.
-win_list.py	Registro de gastos	Alta de gastos con IA (Gemini→OpenAI→local), edición y borrado persistente (CSV).
-win_table.py	Reporte	Visualización de tabla con acumulados, totales por categoría y gráfica.
-win_reco.py	Recomendaciones	Generación del plan corto/mediano/largo según métricas y top gastos. Exportación.
-main.py	Inicio	Menú principal, logo, saludo personalizado y navegación.
-splash.py	Splash	Pantalla de carga inicial con barra de progreso.
+
+| Módulo       | Ventana            | Función clave                                                                 |
+|--------------|--------------------|-------------------------------------------------------------------------------|
+| win_home.py  | Perfil de usuario  | Recolección de datos personales, situación, hábitos, metas y preferencias.    |
+| win_form.py  | Ingresos           | Registro de ingreso fijo y variables, cálculo del total estimado.            |
+| win_list.py  | Registro de gastos | Alta de gastos con IA (Gemini → OpenAI → local), edición y borrado (CSV).     |
+| win_table.py | Reporte            | Visualización de tabla con acumulados, totales por categoría y gráfica.      |
+| win_reco.py  | Recomendaciones    | Generación del plan corto/mediano/largo según métricas y top gastos. Export. |
+| main.py      | Inicio             | Menú principal, logo, saludo personalizado y navegación.                     |
+| splash.py    | Splash             | Pantalla de carga inicial con barra de progreso.                             |
 
 Exportar a Hojas de cálculo
+
 🤖 Clasificación automática de gastos (IA)
-El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia:
+
+El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.
 
 Orden de intentos:
-Gemini (google-genai): Usa un enum de categorías soportadas y aplica un subset por dominio detectado. Esto mejora la precisión al limitar las opciones y reducir las alucinaciones.
+1. Gemini (google-genai): usa un enum de categorías soportadas y aplica un subset por dominio detectado (mejora precisión y reduce alucinaciones).
+2. OpenAI (openai): devuelve categoría + confianza. Si la confianza es baja, se enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y se reintenta.
+3. Local (fallback): mapeo por palabras clave definidas en data/categorias.json → keymap.
 
-OpenAI (openai): Devuelve categoría + confianza. Si la confianza es baja, el sistema enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y reintenta.
-
-Local (Fallback): Se aplica un mapeo por palabras clave definidas en data/categorias.json → keymap.
-
-Tip: Ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs (OpenAI o Gemini), el sistema automáticamente usará el clasificador local.
+Tip: ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
 
 🧩 Recomendaciones personalizadas
-Las recomendaciones se basan en un análisis profundo de la situación financiera del usuario, calculando métricas clave:
 
-Ingreso total mensual y capacidad de ahorro (en MXN y %).
+Las recomendaciones se basan en un análisis de la situación financiera del usuario; calculan métricas clave como:
+- Ingreso total mensual y capacidad de ahorro (MXN y %).
+- Cargas fijas: vivienda, deudas y gastos esenciales.
+- IGD (Índice de Gasto Discrecional).
+- Top de categorías de gasto (extraídas de gastos.csv).
+- Metas del usuario (objetivo, horizonte, aportación).
 
-Cargas fijas: vivienda, deudas y gastos fijos esenciales.
-
-IGD (Índice de Gasto Discrecional).
-
-Top de categorías de gasto (extraídas de gastos.csv).
-
-Metas del usuario (objetivo, horizonte, aportación).
-
-Se estructuran en tres horizontes de acción:
-
-Corto (0–30 días): Enfocado en quick wins y contención de fugas de dinero.
-
-Mediano (1–6 meses): Creación de fondo de emergencia; ajustes estructurales de vivienda/fijos.
-
-Largo (6–24 meses): Automatización de inversión; consolidación de deudas; optimización fiscal.
+Horizontes de acción:
+- Corto (0–30 días): quick wins y contención de fugas de dinero.
+- Mediano (1–6 meses): creación de fondo de emergencia y ajustes estructurales.
+- Largo (6–24 meses): automatización de inversión, consolidación de deudas y optimización fiscal.
 
 Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
 🧪 Solución de problemas
-Problema	Posible causa y solución
-La ventana principal no maximiza.	En Windows/Linux se usa root.state("zoomed"). En macOS se intenta aplicar geometry a pantalla completa si zoomed no está disponible.
-Logo no visible.	Verifica que el archivo assets/ZAVE LOGO.png exista y que tengas permisos de lectura.
-Gemini/OpenAI error 401/429.	Error de autenticación o cuota. Revisa el archivo .env, las variables de entorno y tu plan de uso. El sistema caerá al clasificador local como fallback.
-Tk no disponible (macOS).	Instala Tk junto a tu distribución de Python (por ejemplo, brew install python-tk, según tu gestor de paquetes).
+
+| Problema                                 | Posible causa y solución                                                                 |
+|------------------------------------------|------------------------------------------------------------------------------------------|
+| La ventana principal no maximiza.        | En Windows/Linux se usa root.state("zoomed"). En macOS se aplica geometry si es necesario. |
+| Logo no visible.                         | Verifica que assets/ZAVE LOGO.png exista y que tengas permisos de lectura.              |
+| Gemini/OpenAI error 401/429.             | Error de autenticación o cuota. Revisa .env y las variables de entorno. Fallback local.  |
+| Tk no disponible (macOS).                | Instala Tk para Python (ej.: brew install python-tk o según tu gestor de paquetes).     |
 
 Exportar a Hojas de cálculo
+
 👥 Equipo
-Profesor Camilo Duque — Código base, arquitectura y revisión final.
-
-[Alfredo de Alba Ulloa]
-
-[Daniel Santino Alejandri Cure]
-
-[David Alejandro Flores Cruz]
-
-[Juan Pablo Padilla Ramirez]
-
-[Rodrigo Otero Juárez]
-
+- Profesor Camilo Duque — Código base, arquitectura y revisión final.
+- Alfredo de Alba Ulloa
+- Daniel Santino Alejandri Cure
+- David Alejandro Flores Cruz
+- Juan Pablo Padilla Ramirez
+- Rodrigo Otero Juárez
+// ...existing code...

@@ -234,10 +234,4 @@ Las recomendaciones son exportables a **Markdown, HTML o PDF** (usando ReportLab
   * [¿Juan Pablo Padilla Ramirez] — 
   * [Rodrigo Otero Juárez] — 
 -----
-
-```
-
-He aplicado el formato Markdown a todo el texto y corregido la instrucción de ejecución para VS Code (`Ejecutar ZAVE (splash+main)`).
-
-¿Necesitas ayuda para elegir una **Licencia** o te gustaría que te generara el contenido para la sección de Escalabilidad y Modelo de Negocio?
 ```

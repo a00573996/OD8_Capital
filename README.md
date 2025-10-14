@@ -124,21 +124,23 @@ GEMINI_API_KEY=tu_clave_gemini
 > Si no configuras ninguna clave, el sistema usará un clasificador local de *fallback* basado en palabras clave.
 
 ---
-
-## ▶️ Ejecución desde VS Code (Run and Debug) 🚀
-
+▶️ Ejecución desde VS Code (Run and Debug) 🚀
 Para ejecutar y depurar la aplicación usando la configuración predefinida de VS Code:
 
-1. Abre la carpeta del proyecto (`APPODS/`) en VS Code.
-2. **Activa el entorno virtual** `.venv` si no lo está.
-3. Abre la vista **Run and Debug** ($\text{Ctrl} + \text{Shift} + \text{D}$ o desde el panel lateral).
-4. Selecciona la configuración:
-    
-    ▶️ **Ejecutar ZAVE (splash+main)**
+Abre la carpeta del proyecto (APPODS/) en VS Code.
 
-Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bloque:
+Activa el entorno virtual .venv si no lo está.
 
-```json
+Abre la vista Run and Debug (Ctrl+Shift+D o desde el panel lateral).
+
+Selecciona la configuración:
+
+▶️ Ejecutar ZAVE (splash+main)
+
+Esta configuración utiliza el archivo .vscode/launch.json con el siguiente bloque:
+
+JSON
+
 {
   "name": "Ejecutar ZAVE (splash+main)",
   "type": "debugpy",
@@ -151,81 +153,84 @@ Esta configuración utiliza el archivo `.vscode/launch.json` con el siguiente bl
 }
 Presiona F5 o el botón Run (▶).
 
-Se mostrará primero el splash con la barra de carga y, después, el menú principal (`main.py`) con navegación a todas las ventanas.
+Se mostrará primero el splash con la barra de carga y, después, el menú principal (main.py) con navegación a todas las ventanas.
 
-### Flujo sugerido para demo
+Flujo sugerido para demo
+Perfil de Usuario → completa nombre/edad/ciudad/hábitos.
 
-- **Perfil de Usuario:** Completa nombre, edad, ciudad y hábitos.
-- **Ingresos:** Registra ingreso fijo y variables.
-- **Registro de Gastos:** Agrega ejemplos y prueba la clasificación automática.
-- **Reporte:** Consulta tabla, totales y gráfica.
-- **Recomendaciones:** Revisa plan de acción y exporta (MD / HTML / PDF).
+Ingresos → registra ingreso fijo y variables.
 
----
+Registro de Gastos → agrega ejemplos y prueba la clasificación automática.
 
-## 🪟 Ventanas del sistema
+Reporte → consulta tabla, totales y gráfica.
 
-| Módulo       | Ventana            | Función clave                                                                 |
-|--------------|--------------------|-------------------------------------------------------------------------------|
-| `win_home.py`  | Perfil de usuario  | Recolección de datos personales, situación, hábitos, metas y preferencias.    |
-| `win_form.py`  | Ingresos           | Registro de ingreso fijo y variables, cálculo del total estimado.             |
-| `win_list.py`  | Registro de gastos | Alta de gastos con IA (Gemini → OpenAI → local), edición y borrado (CSV).     |
-| `win_table.py` | Reporte            | Visualización de tabla con acumulados, totales por categoría y gráfica.        |
-| `win_reco.py`  | Recomendaciones    | Generación del plan corto/mediano/largo según métricas y top gastos. Export.  |
-| `main.py`      | Inicio             | Menú principal, logo, saludo personalizado y navegación.                      |
-| `splash.py`    | Splash             | Pantalla de carga inicial con barra de progreso.                              |
+Recomendaciones → revisa plan de acción y Exportar (MD/HTML/PDF).
 
----
+🪟 Ventanas del sistema
+Módulo	Ventana	Función clave
+win_home.py	Perfil de usuario	Recolección de datos personales, situación, hábitos, metas y preferencias.
+win_form.py	Ingresos	Registro de ingreso fijo y variables, cálculo del total estimado.
+win_list.py	Registro de gastos	Alta de gastos con IA (Gemini → OpenAI → local), edición y borrado (CSV).
+win_table.py	Reporte	Visualización de tabla con acumulados, totales por categoría y gráfica.
+win_reco.py	Recomendaciones	Generación del plan corto/mediano/largo según métricas y top gastos. Exportación.
+main.py	Inicio	Menú principal, logo, saludo personalizado y navegación.
+splash.py	Splash	Pantalla de carga inicial con barra de progreso.
 
-## 🤖 Clasificación automática de gastos (IA)
-
+Exportar a Hojas de cálculo
+🤖 Clasificación automática de gastos (IA)
 El sistema intenta clasificar el gasto en un pipeline de tres niveles para maximizar precisión y resiliencia.
 
-**Orden de intentos:**
-1. **Gemini (`google-genai`):** Usa un enum de categorías soportadas y aplica un subset por dominio detectado (mejora precisión y reduce alucinaciones).
-2. **OpenAI (`openai`):** Devuelve categoría + confianza. Si la confianza es baja, se enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y se reintenta.
-3. **Local (fallback):** Mapeo por palabras clave definidas en `data/categorias.json` → keymap.
+Orden de intentos:
 
-> Tip: Ajusta `data/categorias.json` para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
+Gemini (google-genai): Usa un enum de categorías soportadas y aplica un subset por dominio detectado (mejora precisión y reduce alucinaciones).
 
----
+OpenAI (openai): Devuelve categoría + confianza. Si la confianza es baja, se enriquece el contexto (ej. buscando el comercio en Wikipedia/Nominatim) y se reintenta.
 
-## 🧩 Recomendaciones personalizadas
+Local (Fallback): Mapeo por palabras clave definidas en data/categorias.json → keymap.
 
+Tip: Ajusta data/categorias.json para personalizar las categorías y el keymap local. Si recibes errores de cuota (429) en las APIs, el sistema usará automáticamente el clasificador local.
+
+🧩 Recomendaciones personalizadas
 Las recomendaciones se basan en un análisis de la situación financiera del usuario; calculan métricas clave como:
 
-- Ingreso total mensual y capacidad de ahorro (MXN y %).
-- Cargas fijas: vivienda, deudas y gastos esenciales.
-- IGD (Índice de Gasto Discrecional).
-- Top de categorías de gasto (extraídas de `gastos.csv`).
-- Metas del usuario (objetivo, horizonte, aportación).
+Ingreso total mensual y capacidad de ahorro (MXN y %).
 
-**Horizontes de acción:**
-- **Corto (0–30 días):** Quick wins y contención de fugas de dinero.
-- **Mediano (1–6 meses):** Creación de fondo de emergencia y ajustes estructurales.
-- **Largo (6–24 meses):** Automatización de inversión, consolidación de deudas y optimización fiscal.
+Cargas fijas: vivienda, deudas y gastos esenciales.
+
+IGD (Índice de Gasto Discrecional).
+
+Top de categorías de gasto (extraídas de gastos.csv).
+
+Metas del usuario (objetivo, horizonte, aportación).
+
+Horizontes de acción:
+
+Corto (0–30 días): Quick wins y contención de fugas de dinero.
+
+Mediano (1–6 meses): Creación de fondo de emergencia y ajustes estructurales.
+
+Largo (6–24 meses): Automatización de inversión, consolidación de deudas y optimización fiscal.
 
 Las recomendaciones son exportables a Markdown, HTML o PDF (usando ReportLab).
 
----
+🧪 Solución de problemas
+Problema	Posible causa y solución
+La ventana principal no maximiza.	En Windows/Linux se usa root.state("zoomed"). En macOS se aplica geometry si es necesario.
+Logo no visible.	Verifica que assets/ZAVE LOGO.png exista y que tengas permisos de lectura.
+Gemini/OpenAI error 401/429.	Error de autenticación o cuota. Revisa .env y las variables de entorno. Fallback local.
+Tk no disponible (macOS).	Instala Tk para Python (ej.: brew install python-tk o según tu gestor de paquetes).
 
-## 🧪 Solución de problemas
+Exportar a Hojas de cálculo
+👥 Equipo
+Profesor Camilo Duque — Código base, arquitectura y revisión final.
 
-| Problema                                 | Posible causa y solución                                                                 |
-|------------------------------------------|------------------------------------------------------------------------------------------|
-| La ventana principal no maximiza.        | En Windows/Linux se usa `root.state("zoomed")`. En macOS se aplica geometry si es necesario. |
-| Logo no visible.                         | Verifica que `assets/ZAVE LOGO.png` exista y que tengas permisos de lectura.             |
-| Gemini/OpenAI error 401/429.             | Error de autenticación o cuota. Revisa `.env` y las variables de entorno. Fallback local.|
-| Tk no disponible (macOS).                | Instala Tk para Python (ej.: `brew install python-tk` o según tu gestor de paquetes).    |
+[Alfredo de Alba Ulloa]
 
----
+[Daniel Santino Alejandri Cure]
 
-## 👥 Equipo
+[David Alejandro Flores Cruz]
 
-- Profesor Camilo Duque — Código base, arquitectura y revisión final.
-- Alfredo de Alba Ulloa
-- Daniel Santino Alejandri Cure
-- David Alejandro Flores Cruz
-- Juan Pablo Padilla Ramirez
-- Rodrigo Otero Juárez
+[Juan Pablo Padilla Ramirez]
+
+[Rodrigo Otero Juárez]
 

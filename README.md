@@ -1,6 +1,6 @@
+- **Profesor Camilo Duque**
+  
 ## 👥 Equipo
-
-- **Profesor Camilo Duque** — Arquitectura y revisión final  
 - **Alfredo de Alba Ulloa**-QA/Analista
 - **Daniel Santino Alejandri Cure**-Líder Técnico (TL) 
 - **David Alejandro Flores Cruz**-Desarrollador UI 

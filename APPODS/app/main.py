@@ -210,7 +210,7 @@ def main():
                 lambda: go_to(open_win_home, root),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 
-    _nav_button(card, "💵\u2003Ingresos",
+    _nav_button(card, "💵\u2003Registro de Ingresos",
                 lambda: go_to(open_win_form, root),
                 radius=radius, font_btn=font_btn, btn_h=btn_h, btn_w=btn_w).pack(pady=pad_between)
 

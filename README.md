@@ -1,11 +1,11 @@
+- **Profesor Camilo Duque**
+  
 ## 👥 Equipo
-
-- **Profesor Camilo Duque** — Arquitectura y revisión final  
-- **Alfredo de Alba Ulloa**  
-- **Daniel Santino Alejandri Cure**  
-- **David Alejandro Flores Cruz**  
-- **Juan Pablo Padilla Ramírez**  
-- **Rodrigo Otero Juárez**
+- **Alfredo de Alba Ulloa**-QA/Analista
+- **Daniel Santino Alejandri Cure**-Líder Técnico (TL) 
+- **David Alejandro Flores Cruz**-Desarrollador UI 
+- **Juan Pablo Padilla Ramírez**-Product Owner (PO) 
+- **Rodrigo Otero Juárez**-Desarrollador de Datos/API
  ---
 # 💰 ZAVE — (ODS 8)
 

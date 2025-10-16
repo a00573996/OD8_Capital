@@ -69,18 +69,30 @@ def open_win_table(parent: ctk.CTk):
     radius   = max(8, int(10 * scale))
 
     # ----- Scroll principal -----
-    canvas_main = tk.Canvas(win, bg=BG, highlightthickness=0)
+    canvas_main = tk.Canvas(win, bg=BG, highlightthickness=0, borderwidth=0)
     canvas_main.pack(side="left", fill="both", expand=True)
     scrollbar_y = ttk.Scrollbar(win, orient="vertical", command=canvas_main.yview)
     scrollbar_y.pack(side="right", fill="y")
     canvas_main.configure(yscrollcommand=scrollbar_y.set)
 
     frame_container = ctk.CTkFrame(canvas_main, fg_color=BG)
-    canvas_main.create_window((0, 0), window=frame_container, anchor="nw")
+    # IMPORTANTE: guardar el id de la ventana embebida
+    window_id = canvas_main.create_window((0, 0), window=frame_container, anchor="nw")
 
-    def _on_configure(_):
+    # 1) Mantener scrollregion al tamaño real del contenedor
+    def _container_configure(_):
         canvas_main.configure(scrollregion=canvas_main.bbox("all"))
-    frame_container.bind("<Configure>", _on_configure)
+    frame_container.bind("<Configure>", _container_configure)
+
+    # 2) Ajustar el ancho del contenedor al ancho visible del canvas
+    def _canvas_configure(event):
+        try:
+            canvas_main.itemconfigure(window_id, width=event.width)
+        except Exception:
+            pass
+        # actualizar región de scroll por si cambió algo
+        canvas_main.configure(scrollregion=canvas_main.bbox("all"))
+    canvas_main.bind("<Configure>", _canvas_configure)
 
     # ----- Contenido -----
     card = ctk.CTkFrame(frame_container, fg_color=CARD_BG, corner_radius=radius)
@@ -226,6 +238,7 @@ def open_win_table(parent: ctk.CTk):
         chart_canvas_widget = FigureCanvasTkAgg(fig, master=chart_frame)
         chart_canvas_widget.draw()
         chart_canvas_widget.get_tk_widget().pack(fill="both", expand=True, padx=pad, pady=(0, pad))
+        plt.close(fig)  # evitar fugas de memoria
 
     def toggle_chart():
         if not chart_visible.get():
